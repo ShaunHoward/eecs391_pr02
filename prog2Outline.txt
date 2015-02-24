@@ -1,0 +1,67 @@
+EECS 391 Prog2 Outline
+
+Problem has 2 Footmen and one or two Archers, we control the footmen and must kill the archers
+We accept an integer that represents how many plies to examine in the game tree
+We're using an alpha-beta search with heuristic node ordering
+
+Linear evaluation function to evaluate state value:
+	Considerations (in order of importance)
+		1. Minimize Manhattan distance between footmen and archer
+		2. Maximize total footmen health (0 - 320)
+		3. Minimize total archer health (0 - 100)
+	
+	Possible Functions
+		1. Pure distance (assume that we have to be next to the archers to kill them, so closer is better regardless of health) 
+		2. Would be nice to have a function that would sort by the three considerations, but I can't think of one right now, probably going to be a weighted linear function
+		
+Heuristic for Node Expansion:
+	Footman Moves:
+		1. Attack Archer (can we attack on a diagonal? I think so)(if this is an option we really should prune all other non-attack branches)
+		2. Move footman towards archer (we should have a function that can tell in what direction the archer is closest to the footman, and thus tell us how to order each of the 4 possible moves)
+		3. Move footman away from archer
+		
+	Archer Moves (would be nice to have some info one when archers moves vs. attacks, could help us prune/sort better):
+		1. Attack footman (probably should prune all other branches if this is an option?)
+		2. Move away from footman
+		3. Move towards footman
+		
+	Possible move heuristic for footman:
+		xDiff = ArcherX - FootmanX
+		yDiff = ArcherY - FootmanY
+		if xDiff and yDiff are <= 1, we're attacking
+		if xDiff is > 1, archer is east of footman, else archer is west
+		if yDiff is > 1, archer is north of footman, else archer is south
+		if xDiff + and yDiff +, order should be East, North, West, South (does it really matter if we switch E and N, or W and S? If using Manhattan distance they should be identical)
+		if xDiff + and yDiff -, order should be East, South, West North
+		if xDiff - and yDiff +, order should be West, North, East, South
+		if xDiff - and yDiff -, order should be West, South, East, North
+		
+AlphaBeta Algorithm
+
+	function alphaBetaSearch
+		input is a state
+		output is an action to do, corresponding to minimum value of MaxValue(state, -inf, +inf)
+		
+	
+	function maxValue
+		input is a state and a depth, alpha and beta
+		if it's terminal (all archers dead, or depth limit reached) returns a utility value
+		if not
+			v = -inf
+			for each possible action: a
+			v <- max(v, min(s,a)alpha,beta))
+			if v >= beta
+				return v
+			alpha <- max(alpha, v)
+	
+	function minValue
+		input is a state and a depth, alpha and beta
+		if it's terminal, return a utility value
+		if not
+			v = +inf
+			for each possible action: a
+			v <- min(v, max(s,a)alpha,beta))
+			if v <= alpha
+				return v
+			alpha <- max(alpha, v)
+		
