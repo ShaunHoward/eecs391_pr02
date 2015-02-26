@@ -6,6 +6,7 @@ import edu.cwru.sepia.action.DirectedAction;
 import edu.cwru.sepia.action.TargetedAction;
 import edu.cwru.sepia.environment.model.state.State;
 import edu.cwru.sepia.environment.model.state.Unit;
+import edu.cwru.sepia.environment.model.state.Unit.UnitView;
 import edu.cwru.sepia.util.Direction;
 
 import java.util.*;
@@ -19,7 +20,17 @@ import java.util.*;
  * but do not delete or change the signatures of the provided methods.
  */
 public class GameState {
+	 private static final int W_FOOTMAN_HP = 1;
+	 private static final int W_FOOTMAN_DISTANCE = -1;
+	 private static final int W_ARCHER_HP = -10;
+	 private static final int W_FOOTMAN_ALIVE = 10;
+	 private static final int W_ARCHER_ALIVE = -100;
 
+	public int xExtent, yExtent;
+	public List<UnitView> footmen, archers;
+	private int footmanNum = 0;
+	private int archerNum = 1;
+	
     /**
      * You will implement this constructor. It will
      * extract all of the needed state information from the built in
@@ -42,6 +53,27 @@ public class GameState {
      * @param state Current state of the episode
      */
     public GameState(State.StateView state) {
+    	xExtent = state.getXExtent();
+    	yExtent = state.getYExtent();
+    	this.footmen = state.getUnits(footmanNum);
+    	this.archers = state.getUnits(archerNum);
+    	
+    }
+    
+    public int getFootmenHealth() {
+    	int totalHealth = 0;
+    	for (UnitView footman : footmen) {
+    		totalHealth += footman.getHP();
+    	}
+    	return totalHealth;
+    }
+    
+    public int getArcherHealth() {
+    	int totalHealth = 0;
+    	for (UnitView archer : archers) {
+    		totalHealth += archer.getHP();
+    	}
+    	return totalHealth;
     }
 
     /**
@@ -63,7 +95,32 @@ public class GameState {
      * @return The weighted linear combination of the features
      */
     public double getUtility() {
-        return 0.0;
+		int distanceFromArchers = 0;
+		for (UnitView footman : footmen) {
+			distanceFromArchers += minDistanceFromArcher(footman);
+		}
+		
+		return ((W_FOOTMAN_HP * getFootmenHealth())
+		+ (W_ARCHER_HP * getArcherHealth())
+		+ (W_FOOTMAN_DISTANCE * distanceFromArchers)
+		+ (W_FOOTMAN_ALIVE * footmen.size())
+		+ (W_ARCHER_ALIVE * archers.size()));
+    }
+    
+    private int minDistanceFromArcher(UnitView footman) {
+    	int minDist = Integer.MAX_VALUE;
+    	int nextDist = 0;
+    	//Find the closest distance between footman and archers
+    	for (UnitView archer : archers) {
+    		nextDist = Math.max(
+    		    		Math.abs(footman.getXPosition() - archer.getXPosition()),
+    		    		Math.abs(footman.getYPosition() - archer.getYPosition()));
+    		if (nextDist < minDist){
+    			minDist = nextDist;
+    		}
+    	}
+    	//When there are no archers, return 0, else return the min distance to an archer
+    	return archers.isEmpty() ? 0 : minDist;
     }
 
     /**
