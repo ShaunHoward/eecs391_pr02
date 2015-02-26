@@ -77,6 +77,85 @@ public class MinimaxAlphaBeta extends Agent {
     	
         return node;
     }
+    
+    /**
+     * Returns the max value attainable from the given game state child, according to
+     * the given alpha, beta, and depth for the current minimax game tree.
+     * 
+     * @param child - the game state child with the game state and action map for the previous game state
+     * @param alpha - the max value found this far in the game search
+     * @param beta - the min value found this far in the game search
+     * @param depth - the depth of the current game tree
+     * @return the max value attainable from the given game state child
+     */
+	private double maxValue(GameStateChild child, double alpha, double beta, int depth){
+	    GameState state = child.state;
+		
+	    //if state is terminal (all archers dead or depth limit reached)
+		if(state.getChildren().isEmpty()){ 
+		    return state.getUtility();
+		} else {
+			double v = Double.NEGATIVE_INFINITY;
+			List<GameStateChild> sortedChildren = orderChildrenWithHeuristics(state.getChildren());
+			for(GameStateChild sortedChild : sortedChildren){
+				v = max(v, minValue(sortedChild), alpha, beta);
+				if (v >= beta){
+					return v;
+				}
+				alpha = max(alpha, v);
+			}
+	        
+	        return v;
+		}
+	}
+	
+	/**
+	 * Returns the maximum value of the given input values.
+	 * 
+	 * @param values - the double value(s) to find the max of
+	 * @return the max value of the given values
+	 */
+	private double max(double... values){
+		double max = Double.NEGATIVE_INFINITY;
+		for (double value : values){
+			if (value > max){
+				max = value;
+			}
+		}
+		return max;
+	}
+	
+	/**
+	 * Returns the minimum value of the given input values.
+	 * 
+	 * @param values - the double value(s) to find the min of
+	 * @return the min value of the given values
+	 */
+	private double min(double... values){
+		double min = Double.POSITIVE_INFINITY;
+		for (double value : values){
+			if (value < min){
+				min = value;
+			}
+		}
+		return min;
+	}
+
+function minValue(GameStateChild child, double a, double b, int depth)
+	state <- child.state
+	//input is a state and a depth, alpha and beta
+	if state is a terminal
+	    return a utility value
+	else
+		v = +inf
+		sortedChildren <- orderChildrenWithHeuristics(state.getChildren())
+		for each child in sortedChildren
+			v <- min(v, maxValue(child), alpha, beta))
+			if v <= alpha
+				return v
+			alpha <- min(alpha, v)
+		end for
+		return v
 
     /**
      * You will implement this.
