@@ -67,13 +67,16 @@ public class MinimaxAlphaBeta extends Agent {
      * code into other functions and methods)
      *
      * @param node The action and state to search from
-     * @param depth The remaining number of plys under this node
+     * @param depth The remaining number of plies under this node
      * @param alpha The current best value for the maximizing node from this node to the root
      * @param beta The current best value for the minimizing node from this node to the root
      * @return The best child of this node with updated values
      */
     public GameStateChild alphaBetaSearch(GameStateChild node, int depth, double alpha, double beta)
     {
+    	//maxValue(node, alpha, beta, 0, depth);
+    	//get next best GSC from GSC node that is given
+    	//return that best GSC
     	return null;
         //return maxValue(node,alpha,beta,depth);
     }
@@ -85,21 +88,23 @@ public class MinimaxAlphaBeta extends Agent {
      * @param child - the game state child with the game state and action map for the previous game state
      * @param alpha - the max value found this far in the game search
      * @param beta - the min value found this far in the game search
-     * @param depth - the depth of the current game tree
+     * @param currDepth - the depth of the current game tree
+     * @param maxDepth - the deepest level to expand the game tree
      * @return the max value attainable from the given game state child
      */
-	private GameState maxValue(GameStateChild child, double alpha, double beta, int depth){
+	private GameState maxValue(GameStateChild child, double alpha, double beta, int currDepth, int maxDepth){
 	    GameState state = child.state;
+	    state.setDepth(currDepth);
 		
 	    //if state is terminal (all archers dead or depth limit reached)
-		if(state.getChildren().isEmpty()){ 
+		if(state.getArcherHealth() == 0 || state.getDepth() + 1 == maxDepth){ 
 		    return state; //instead of state.getUtility()
 		} else {
 			GameState vState = null;
 			//double v = Double.NEGATIVE_INFINITY;
 			List<GameStateChild> sortedChildren = orderChildrenWithHeuristics(state.getChildren());
 			for(GameStateChild sortedChild : sortedChildren){
-				vState = maxChild(vState, minValue(sortedChild, alpha, beta, depth));
+				vState = maxChild(vState, minValue(sortedChild, alpha, beta, currDepth + 1, maxDepth));
 				if (vState.getUtility() >= beta){ //instead of v >= beta
 					return vState;
 				}
@@ -117,14 +122,16 @@ public class MinimaxAlphaBeta extends Agent {
      * @param child - the game state child with the game state and action map for the previous game state
      * @param alpha - the max value found this far in the game search
      * @param beta - the min value found this far in the game search
-     * @param depth - the depth of the current game tree
+     * @param currDepth - the depth of the current game tree
+     * @param maxDepth - the deepest level to expand the game tree
      * @return the min value attainable from the given game state child
      */
-	private GameState minValue(GameStateChild child, double alpha, double beta, int depth){
+	private GameState minValue(GameStateChild child, double alpha, double beta, int currDepth, int maxDepth){
 	    GameState state = child.state;
+		state.setDepth(currDepth);
 		
-	    //if state is terminal
-		if(state.getChildren().isEmpty()){ 
+	    //if state is terminal (all footmen dead or depth limit reached)
+		if(state.getFootmenHealth() == 0 || state.getDepth() + 1 == maxDepth){ 
 		    return state; //instead of state.getUtility()
 		} else {
 			GameState vState = null;
@@ -132,7 +139,7 @@ public class MinimaxAlphaBeta extends Agent {
 			List<GameStateChild> sortedChildren = orderChildrenWithHeuristics(state.getChildren());
 			for(GameStateChild sortedChild : sortedChildren){
 				
-				vState = minChild(vState, maxValue(sortedChild, alpha, beta, depth));
+				vState = minChild(vState, maxValue(sortedChild, alpha, beta, currDepth + 1, maxDepth));
 				//v = min(v, maxValue(sortedChild, alpha, beta, depth));
 				if (vState.getUtility() <= alpha){ //instead of v <= alpha
 					return vState;

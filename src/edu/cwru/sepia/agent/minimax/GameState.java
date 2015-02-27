@@ -30,6 +30,7 @@ public class GameState {
 	public List<UnitView> footmen, archers;
 	private int footmanNum = 0;
 	private int archerNum = 1;
+	private int depth = 0;
 	
     /**
      * You will implement this constructor. It will
@@ -60,6 +61,19 @@ public class GameState {
     	
     }
     
+    public GameState(State.StateView state, int depth){
+    	this(state);
+    	this.depth = depth;
+    }
+    
+    public int getDepth(){
+    	return this.depth;
+    }
+    
+    public void setDepth(int depth){
+    	this.depth = depth;
+    }
+    
     public int getFootmenHealth() {
     	int totalHealth = 0;
     	for (UnitView footman : footmen) {
@@ -74,6 +88,12 @@ public class GameState {
     		totalHealth += archer.getHP();
     	}
     	return totalHealth;
+    }
+    
+    public List<UnitView> getEntities(){
+    	List<UnitView> entities = new ArrayList<>(footmen);
+    	entities.addAll(archers);
+    	return entities;
     }
 
     /**
@@ -140,6 +160,134 @@ public class GameState {
      * @return All possible actions and their associated resulting game state
      */
     public List<GameStateChild> getChildren() {
-        return null;
+    	
+    	 List<GameStateChild> states = new ArrayList<>();
+    	 Map<UnitView, List<Action>> possibleActions = new HashMap<>();
+    	 List<Map<Integer, Action>> possibleStates = new ArrayList<>();
+    	 List<UnitView> entities = getEntities();
+    	 
+    	 //Add all possible actions to the action list for each footman
+    	 for (UnitView footman : footmen) {
+    		 possibleActions.put(footman, new ArrayList<Action>());
+    		 
+	    	 int footmanX = footman.getXPosition();
+	    	 int footmanY = footman.getYPosition();
+    		 
+	    	 //Add all possible moves to the action list for this footman
+        	 for (Direction direction : Direction.values()){
+        		 if (possibleMove(footmanX + direction.xComponent(), footmanY + direction.yComponent(), entities)){
+        			 possibleActions.get(footman).add(Action.createPrimitiveMove(footman.getID(), direction));
+        		 }
+        	 }
+        	 
+        	 //Add all possible attacks to the action list for this footman
+        	 for (UnitView archer : adjacentArchers(footmanX, footmanY)){
+        		 possibleActions.get(footman).add(Action.createPrimitiveAttack(footman.getID(), archer.getID()));
+        	 }
+    	 }
+    	 
+    	 Map<Integer, Action> currStateActions = new HashMap<>();
+    	 
+    	 //Make all the possible game states, eliminating those options where
+    	 //footmen move to the same location.
+    	 for (Action footmanOneAction : possibleActions.get(footmen.get(0))){
+    		 if (footmen.size() > 1){
+	    		 for (Action footmanTwoAction : possibleActions.get(footmen.get(1))){
+	    			 //Create a new game state when footmen are not moving to the same
+	    			 //location or when footmen have different types of actions.
+		    		 if (footmanOneAction.getType() == ActionType.PRIMITIVEMOVE 
+		    		 && footmanTwoAction.getType() == ActionType.PRIMITIVEMOVE
+		    		 && !moveToSameLocation(footmanOneAction, footmanTwoAction)
+		    		 || (footmanOneAction.getType() != ActionType.PRIMITIVEMOVE 
+		    		 || footmanTwoAction.getType() != ActionType.PRIMITIVEMOVE)){
+		    			 currStateActions.put(footmen.get(0).getID(), footmanOneAction);
+		    			 currStateActions.put(footmen.get(1).getID(), footmanTwoAction);
+		    			 states.add(new GameStateChild(currStateActions, )))
+		    		 }
+	    	 	 }
+    		 } else {
+    			 currStateActions.put(footmen.get(0).getID(), footmanOneAction);
+    		 }
+    	 }
+
+    	 return states;
+
+//    	for (Direction direction : Directions.values()){
+//    		
+//    	}
+//        return null;
+    }
+    
+    /**
+     * Determines if both footman 1 and footman 2 are moving to the same location.
+     * 
+     * @param moveActionOne - the move action of footman 1
+     * @param moveActionTwo - the move action of footman 2
+     * @return whether both footman 1 and footman 2 are moving to the same location
+     */
+    public boolean moveToSameLocation(Action moveActionOne, Action moveActionTwo){
+    	DirectedAction dActionOne = (DirectedAction)moveActionOne;
+    	DirectedAction dActionTwo = (DirectedAction)moveActionTwo;
+    	int xOne = footmen.get(0).getXPosition() + dActionOne.getDirection().xComponent();
+    	int yOne = footmen.get(0).getYPosition() + dActionOne.getDirection().yComponent();
+    	int xTwo = footmen.get(1).getXPosition() + dActionTwo.getDirection().xComponent();
+    	int yTwo = footmen.get(1).getYPosition() + dActionTwo.getDirection().yComponent();
+    	return (xOne == xTwo) && (yOne == yTwo);
+    }
+    
+    /**
+     * Determines if the given x and y coordinates lead to a possible move that
+     * is not blocked by other entities on the game map.
+     * 
+     * @param x - the x coordinate of the move
+     * @param y - the y coordinate of the move
+     * @param entities - the entities on the game map currently
+     * @return whether the given x and y coordinates lead to a possible move that
+     * is not currently blocked by another entity
+     */
+    public boolean possibleMove(int x, int y, List<UnitView> entities){
+    	boolean isPossible = true;
+    	
+    	//check if the location is on the map
+    	if (!(0 <= x && x < xExtent) || !(0 <= y && y < yExtent)){
+    		isPossible = false;
+    	} else {
+	    	//check if an entity is already at the desired move location
+    		ENTITY_LOOP:
+	    	for (UnitView entity : entities){
+	    		if (entity.getXPosition() == x && entity.getYPosition() == y){
+	    			isPossible = false;
+	    			break ENTITY_LOOP;
+	    		}
+	    	}
+    	}
+    	return isPossible;
+    }
+    
+    /**
+    * Returns all targets adjacent to the given coordinate.
+    *
+    * @param x The x coordinate
+    * @param y The y coordinate
+    * @return A list containing all adjacent targets
+    */
+    private List<UnitView> adjacentArchers(int x, int y) {
+	    List<UnitView> targets = new ArrayList<>();
+	    
+	    //get north
+	    //get south
+	    //get east
+	    //get west
+	    
+	    for (int i = x - 1; i <= x + 1; i++) {
+		    for (int j = y - 1; j <= y + 1; j++) {
+			    for (UnitView archer : archers) {
+				    if (archer.getXPosition() == i && archer.getYPosition() == j) {
+				    	targets.add(archer);
+				    }
+			    }
+		    }
+	    }
+	    return targets;
     }
 }
