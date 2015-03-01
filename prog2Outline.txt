@@ -49,10 +49,10 @@ AlphaBeta Algorithm
 		if not
 			v = -inf
 			for each possible action: a
-			v <- max(v, min(s,a)alpha,beta))
-			if v >= beta
-				return v
-			alpha <- max(alpha, v)
+			v <- max(v, minValue(s,a),alpha,beta))
+				if v >= beta
+					return v
+				alpha <- max(alpha, v)
 	
 	function minValue
 		input is a state and a depth, alpha and beta
@@ -60,8 +60,8 @@ AlphaBeta Algorithm
 		if not
 			v = +inf
 			for each possible action: a
-			v <- min(v, max(s,a)alpha,beta))
-			if v <= alpha
-				return v
-			alpha <- max(alpha, v)
+			v <- min(v, maxValue(s,a),alpha,beta))
+				if v <= alpha
+					return v
+				alpha <- min(alpha, v)
 		
