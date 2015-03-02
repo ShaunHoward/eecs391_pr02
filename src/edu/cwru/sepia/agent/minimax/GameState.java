@@ -5,10 +5,12 @@ import edu.cwru.sepia.action.ActionType;
 import edu.cwru.sepia.action.DirectedAction;
 import edu.cwru.sepia.action.TargetedAction;
 import edu.cwru.sepia.environment.model.state.State;
+import edu.cwru.sepia.environment.model.state.StateCreator;
 import edu.cwru.sepia.environment.model.state.Unit;
 import edu.cwru.sepia.environment.model.state.Unit.UnitView;
 import edu.cwru.sepia.util.Direction;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -29,13 +31,15 @@ public class GameState {
 	private static final int ARCHER_RANGE = 15;
 
 	public int xExtent = 0, yExtent = 0;
-	public List<UnitView> footmen, archers;
+	public Map<Integer, Unit> footmen, archers;
+	public List<UnitView> footmenView, archersView;
 	private int footmanNum = 0;
 	private int archerNum = 1;
 	private int depth = 0;
 	private int weight = Integer.MIN_VALUE;
 	private boolean isMax = true;
-
+	
+	private State state;
 	/**
 	 * You will implement this constructor. It will extract all of the needed
 	 * state information from the built in SEPIA state view.
@@ -58,24 +62,27 @@ public class GameState {
 	 *
 	 * @param state
 	 *            Current state of the episode
+	 * @throws IOException 
 	 */
-	public GameState(State.StateView state) {
+	public GameState(State.StateView stateView) throws IOException {
+		StateCreator creator = stateView.getStateCreator();
+		this.state = creator.createState();
+		footmen = state.getUnits(footmanNum);
+		archers = state.getUnits(archerNum);
+		
 		xExtent = state.getXExtent();
 		yExtent = state.getYExtent();
-		this.footmen = state.getUnits(footmanNum);
-		this.archers = state.getUnits(archerNum);
-
 	}
 
-	public GameState(State.StateView state, int depth) {
+	public GameState(State.StateView state, int depth) throws IOException {
 		this(state);
 		this.depth = depth;
 	}
 
 	public GameState(Integer weight) {
 		this.weight = weight;
-		footmen = new ArrayList<UnitView>();
-		archers = new ArrayList<UnitView>();
+		footmenView = new ArrayList<UnitView>();
+		archersView = new ArrayList<UnitView>();
 	}
 	
 	public GameState(GameState parent){
@@ -120,7 +127,7 @@ public class GameState {
 
 	public int getFootmenHealth() {
 		int totalHealth = 0;
-		for (UnitView footman : footmen) {
+		for (UnitView footman : footmenView) {
 			totalHealth += footman.getHP();
 		}
 		return totalHealth;
@@ -128,15 +135,15 @@ public class GameState {
 
 	public int getArcherHealth() {
 		int totalHealth = 0;
-		for (UnitView archer : archers) {
+		for (UnitView archer : archersView) {
 			totalHealth += archer.getHP();
 		}
 		return totalHealth;
 	}
 
 	public List<UnitView> getEntities() {
-		List<UnitView> entities = new ArrayList<>(footmen);
-		entities.addAll(archers);
+		List<UnitView> entities = new ArrayList<>(footmenView);
+		entities.addAll(archersView);
 		return entities;
 	}
 
@@ -145,10 +152,80 @@ public class GameState {
 	}
 	
 	public void applyActions(Map<Integer, Action> actions){
-		//Apply actions, i.e. move or attack
-		//Detriment the hp of enemies if attacking
-		//Move player positions if moving
-		//etc.
+		Set keySet = actions.keySet(); //Gets set of all keys contained in the map
+		Iterator<Integer> keySetItr = keySet.iterator();
+		
+		while (keySetItr.hasNext()){
+			Integer currentKey = keySetItr.next();
+			Action currentAction = actions.get(currentKey);
+			ActionType currentActionType = currentAction.getType();
+			
+			if (currentActionType == ActionType.PRIMITIVEATTACK) {
+				TargetedAction currentTargetedAction = (TargetedAction) currentAction; //There might be a better way to do this
+				int unitId = currentTargetedAction.getUnitId();
+				int targetId = currentTargetedAction.getTargetId();
+				
+				Unit unit = state.getUnit(unitId);
+				Unit target = state.getUnit(targetId);
+				
+				target.setHP(target.getCurrentHealth() - unit.getTemplate().getBasicAttack());
+			}
+			
+			else if (currentActionType == ActionType.PRIMITIVEMOVE) {
+				DirectedAction currentDirectedAction = (DirectedAction) currentAction;
+				int unitID = currentDirectedAction.getUnitId();
+				Unit unit = state.getUnit(unitID);
+				Direction moveDirection = currentDirectedAction.getDirection();
+				
+				if (moveDirection == Direction.NORTH)
+					unit.setyPosition(unit.getyPosition() + 1);
+				if (moveDirection == Direction.SOUTH)
+					unit.setyPosition(unit.getyPosition() - 1);
+				if (moveDirection == Direction.EAST)
+					unit.setxPosition(unit.getxPosition() + 1);
+				if (moveDirection == Direction.WEST)
+					unit.setxPosition(unit.getxPosition() - 1);
+				if (moveDirection == Direction.NORTHEAST){
+					unit.setyPosition(unit.getyPosition() + 1);
+					unit.setxPosition(unit.getxPosition() + 1);
+				}
+				if (moveDirection == Direction.SOUTHEAST){
+					unit.setyPosition(unit.getyPosition() - 1);
+					unit.setxPosition(unit.getxPosition() + 1);
+				}
+				if (moveDirection == Direction.NORTHWEST){
+					unit.setyPosition(unit.getyPosition() + 1);
+					unit.setxPosition(unit.getxPosition() - 1);
+				}
+				if (moveDirection == Direction.SOUTHWEST){
+					unit.setyPosition(unit.getyPosition() - 1);
+					unit.setxPosition(unit.getxPosition() - 1);
+				}
+			}
+		}
+		
+		refreshViews();
+	}
+	
+	private void refreshViews() {
+		
+		footmenView.clear();
+		archersView.clear();
+		
+		Iterator<Integer> footmenItr = footmen.keySet().iterator();
+		Iterator<Integer> archersItr = archers.keySet().iterator();
+		
+		while (footmenItr.hasNext()) {
+			Integer currentKey = footmenItr.next();
+			if (footmen.get(currentKey).getCurrentHealth() > 0)
+				footmenView.add(footmen.get(currentKey).getView());
+		}
+		
+		while (archersItr.hasNext()) {
+			Integer currentKey = archersItr.next();
+			if (archers.get(currentKey).getCurrentHealth() > 0)
+				archersView.add(archers.get(currentKey).getView());
+		}
 	}
 
 	/**
@@ -173,7 +250,7 @@ public class GameState {
 	 */
 	public int getUtility() {
 		int distanceFromArchers = 0;
-		for (UnitView footman : footmen) {
+		for (UnitView footman : footmenView) {
 			distanceFromArchers += minDistanceFromArcher(footman);
 		}
 
@@ -203,7 +280,7 @@ public class GameState {
 		int minDist = Integer.MAX_VALUE;
 		int nextDist = 0;
 		// Find the closest distance between footman and archers
-		for (UnitView archer : archers) {
+		for (UnitView archer : archersView) {
 			nextDist = Math.max(
 					Math.abs(footman.getXPosition() - archer.getXPosition()),
 					Math.abs(footman.getYPosition() - archer.getYPosition()));
@@ -241,20 +318,20 @@ public class GameState {
 		int unitTwoID = 0;
 		boolean twoUnits = false;
 		if (isMax) {
-			unitOneID = footmen.get(0).getID();
-			unitOneActions = getActions(footmen.get(0), archers);
+			unitOneID = footmenView.get(0).getID();
+			unitOneActions = getActions(footmenView.get(0), archersView);
 
 			if (footmen.size() > 1) {
-				unitTwoID = footmen.get(1).getID();
-				unitTwoActions = getActions(footmen.get(1), archers);
+				unitTwoID = footmenView.get(1).getID();
+				unitTwoActions = getActions(footmenView.get(1), archersView);
 				twoUnits = true;
 			}
 		} else {
-			unitOneID = archers.get(0).getID();
-			unitOneActions = getActions(archers.get(0), footmen);
+			unitOneID = archersView.get(0).getID();
+			unitOneActions = getActions(archersView.get(0), footmenView);
 			if (archers.size() > 1) {
-				unitTwoID = archers.get(1).getID();
-				unitTwoActions = getActions(archers.get(1), footmen);
+				unitTwoID = archersView.get(1).getID();
+				unitTwoActions = getActions(archersView.get(1), footmenView);
 				twoUnits = true;
 			}
 		}
@@ -343,9 +420,9 @@ public class GameState {
 		DirectedAction dActionTwo = (DirectedAction) moveActionTwo;
 		List<UnitView> units;
 		if (isMax){
-			units = footmen;
+			units = footmenView;
 		} else {
-			units = archers;
+			units = archersView;
 		}
 		
 		int xOne = units.get(0).getXPosition()
@@ -398,10 +475,10 @@ public class GameState {
 		List<UnitView> enemiesInRange = new ArrayList<>();
 
 		if (isMax) {
-			enemies = archers;
+			enemies = archersView;
 			range = FOOTMAN_RANGE;
 		} else {
-			enemies = footmen;
+			enemies = footmenView;
 			range = ARCHER_RANGE;
 		}
 

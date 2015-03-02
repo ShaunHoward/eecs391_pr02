@@ -5,6 +5,7 @@ import edu.cwru.sepia.agent.Agent;
 import edu.cwru.sepia.environment.model.history.History;
 import edu.cwru.sepia.environment.model.state.State;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -35,11 +36,16 @@ public class MinimaxAlphaBeta extends Agent {
 
     @Override
     public Map<Integer, Action> middleStep(State.StateView newstate, History.HistoryView statehistory) {
-        GameStateChild bestChild = alphaBetaSearch(new GameStateChild(newstate),
-                0,
-                true,
-                new GameStateChild(new HashMap<Integer, Action>(), new GameState(Integer.MIN_VALUE)),
-                new GameStateChild(new HashMap<Integer, Action>(), new GameState(Integer.MAX_VALUE)));
+        GameStateChild bestChild = null;
+		try {
+			bestChild = alphaBetaSearch(new GameStateChild(newstate),
+			        0,
+			        true,
+			        new GameStateChild(new HashMap<Integer, Action>(), new GameState(Integer.MIN_VALUE)),
+			        new GameStateChild(new HashMap<Integer, Action>(), new GameState(Integer.MAX_VALUE)));
+		} catch (IOException e) {
+			System.out.println("ÏOException thrown");
+		}
 
         return bestChild.action;
     }

@@ -3,6 +3,7 @@ package edu.cwru.sepia.agent.minimax;
 import edu.cwru.sepia.action.Action;
 import edu.cwru.sepia.environment.model.state.State;
 
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -16,7 +17,7 @@ public class GameStateChild {
     //* This is the game state resulting from the specified set of actions
     public GameState state;
 
-    public GameStateChild(State.StateView state)
+    public GameStateChild(State.StateView state) throws IOException
     {
         action = null;
         this.state = new GameState(state);
