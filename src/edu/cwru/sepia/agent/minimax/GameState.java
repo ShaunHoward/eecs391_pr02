@@ -151,8 +151,13 @@ public class GameState {
 		return footmen.isEmpty() || archers.isEmpty();
 	}
 	
+	/**
+	 * Applies actions to the state
+	 * 
+	 * @param actions The actions to be applied
+	 */
 	public void applyActions(Map<Integer, Action> actions){
-		Set keySet = actions.keySet(); //Gets set of all keys contained in the map
+		Set<Integer> keySet = actions.keySet(); //Gets set of all keys contained in the map
 		Iterator<Integer> keySetItr = keySet.iterator();
 		
 		while (keySetItr.hasNext()){
@@ -177,6 +182,8 @@ public class GameState {
 				Unit unit = state.getUnit(unitID);
 				Direction moveDirection = currentDirectedAction.getDirection();
 				
+				//Specifically says in the JavaDoc not to move units in this way
+				//but since we're not actually returning this in the middlestep I don't see any other way to do it currently.
 				if (moveDirection == Direction.NORTH)
 					unit.setyPosition(unit.getyPosition() + 1);
 				if (moveDirection == Direction.SOUTH)
@@ -207,6 +214,9 @@ public class GameState {
 		refreshViews();
 	}
 	
+	/**
+	 * Refreshes the UnitViews based on the current units. Clears the lists, then adds back in any unit that has health > 0
+	 */
 	private void refreshViews() {
 		
 		footmenView.clear();
