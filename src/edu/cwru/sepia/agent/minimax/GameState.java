@@ -67,8 +67,11 @@ public class GameState {
 	public GameState(State.StateView stateView) throws IOException {
 		StateCreator creator = stateView.getStateCreator();
 		this.state = creator.createState();
+		
 		footmen = state.getUnits(footmanNum);
 		archers = state.getUnits(archerNum);
+		
+		refreshViews();
 		
 		xExtent = state.getXExtent();
 		yExtent = state.getYExtent();
@@ -219,8 +222,14 @@ public class GameState {
 	 */
 	private void refreshViews() {
 		
-		footmenView.clear();
-		archersView.clear();
+		if (footmenView != null)
+			footmenView.clear();
+		else
+			footmenView = new ArrayList<UnitView>();
+		if (archersView != null)
+			archersView.clear();
+		else
+			archersView = new ArrayList<UnitView>();
 		
 		Iterator<Integer> footmenItr = footmen.keySet().iterator();
 		Iterator<Integer> archersItr = archers.keySet().iterator();
@@ -321,6 +330,7 @@ public class GameState {
 	 * @return All possible actions and their associated resulting game state
 	 */
 	public List<GameStateChild> getChildren() {
+
 		List<Action> unitOneActions = new ArrayList<>();
 		List<Action> unitTwoActions = new ArrayList<>();
 		List<Map<Integer, Action>> action = new ArrayList<>();
