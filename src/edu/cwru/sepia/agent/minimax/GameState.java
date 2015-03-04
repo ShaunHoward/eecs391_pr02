@@ -32,8 +32,7 @@ public class GameState {
 	private static final int ARCHER_RANGE = 15;
 
 	public int xExtent = 0, yExtent = 0;
-	public Map<Integer, Unit> footmen, archers;
-	public List<UnitView> footmenView, archersView;
+	public List<GameUnit> footmen, archers;
 	private int footmanNum = 0;
 	private int archerNum = 1;
 	private int depth = 0;
@@ -41,8 +40,7 @@ public class GameState {
 	private boolean isMax = true;
 	
 	private State state;
-	Unit footman;
-	private Collection<Unit> footmenKeySet;
+
 	/**
 	 * You will implement this constructor. It will extract all of the needed
 	 * state information from the built in SEPIA state view.
@@ -67,20 +65,19 @@ public class GameState {
 	 *            Current state of the episode
 	 * @throws IOException 
 	 */
-	public GameState(State.StateView stateView) throws IOException{
-		StateCreator creator = stateView.getStateCreator();
-		this.state = creator.createState();
+	public GameState(State.StateView stateView){
+		footmen = new ArrayList<GameUnit>();
+		archers = new ArrayList<GameUnit>();
+		List<Unit.UnitView> footmenUnitView = stateView.getUnits(footmanNum);
+		List<Unit.UnitView> archersUnitView = stateView.getUnits(archerNum);
 		
-		footmen = state.getUnits(footmanNum);
-		archers = state.getUnits(archerNum);
+		for (Unit.UnitView footman : footmenUnitView) {
+			footmen.add(new GameUnit(footman));
+		}
 		
-		if (footmen.size() == 0 || archers.size() == 0)
-			System.err.println("No footmen and/or no archers found");
-		
-		footmenKeySet = footmen.values();
-		footman = footmen.get(0);
-		
-		refreshViews();
+		for (Unit.UnitView archer : archersUnitView) {
+			archers.add(new GameUnit(archer));
+		}
 		
 		xExtent = state.getXExtent();
 		yExtent = state.getYExtent();
@@ -91,11 +88,13 @@ public class GameState {
 		this.depth = depth;
 	}
 
+	/* Not really sure what this constructor is for so I'm commenting it out for now
 	public GameState(Integer weight) {
 		this.weight = weight;
 		footmenView = new ArrayList<UnitView>();
 		archersView = new ArrayList<UnitView>();
 	}
+	*/
 	
 	public GameState(GameState parent){
 		this.footmen = parent.footmen;
@@ -139,7 +138,7 @@ public class GameState {
 
 	public int getFootmenHealth() {
 		int totalHealth = 0;
-		for (UnitView footman : footmenView) {
+		for (GameUnit footman : footmen) {
 			totalHealth += footman.getHP();
 		}
 		return totalHealth;
@@ -147,15 +146,15 @@ public class GameState {
 
 	public int getArcherHealth() {
 		int totalHealth = 0;
-		for (UnitView archer : archersView) {
+		for (GameUnit archer : archers) {
 			totalHealth += archer.getHP();
 		}
 		return totalHealth;
 	}
 
-	public List<UnitView> getEntities() {
-		List<UnitView> entities = new ArrayList<>(footmenView);
-		entities.addAll(archersView);
+	public List<GameUnit> getEntities() {
+		List<GameUnit> entities = new ArrayList<>(footmen);
+		entities.addAll(archers);
 		return entities;
 	}
 
@@ -182,53 +181,66 @@ public class GameState {
 				int unitId = currentTargetedAction.getUnitId();
 				int targetId = currentTargetedAction.getTargetId();
 				
-				Unit unit = state.getUnit(unitId);
-				Unit target = state.getUnit(targetId);
+				GameUnit unit = getUnit(unitId);
+				GameUnit target = getUnit(targetId);
 				
-				target.setHP(target.getCurrentHealth() - unit.getTemplate().getBasicAttack());
+				target.setHP(target.getHP() - unit.getDamage());
 			}
 			
 			else if (currentActionType == ActionType.PRIMITIVEMOVE) {
 				DirectedAction currentDirectedAction = (DirectedAction) currentAction;
 				int unitID = currentDirectedAction.getUnitId();
-				Unit unit = state.getUnit(unitID);
+				GameUnit unit = getUnit(unitID);
 				Direction moveDirection = currentDirectedAction.getDirection();
 				
 				//Specifically says in the JavaDoc not to move units in this way
 				//but since we're not actually returning this in the middlestep I don't see any other way to do it currently.
 				if (moveDirection == Direction.NORTH)
-					unit.setyPosition(unit.getyPosition() + 1);
+					unit.setYPosition(unit.getYPosition() + 1);
 				if (moveDirection == Direction.SOUTH)
-					unit.setyPosition(unit.getyPosition() - 1);
+					unit.setYPosition(unit.getYPosition() - 1);
 				if (moveDirection == Direction.EAST)
-					unit.setxPosition(unit.getxPosition() + 1);
+					unit.setXPosition(unit.getXPosition() + 1);
 				if (moveDirection == Direction.WEST)
-					unit.setxPosition(unit.getxPosition() - 1);
+					unit.setXPosition(unit.getXPosition() - 1);
 				if (moveDirection == Direction.NORTHEAST){
-					unit.setyPosition(unit.getyPosition() + 1);
-					unit.setxPosition(unit.getxPosition() + 1);
+					unit.setYPosition(unit.getYPosition() + 1);
+					unit.setXPosition(unit.getXPosition() + 1);
 				}
 				if (moveDirection == Direction.SOUTHEAST){
-					unit.setyPosition(unit.getyPosition() - 1);
-					unit.setxPosition(unit.getxPosition() + 1);
+					unit.setYPosition(unit.getYPosition() - 1);
+					unit.setXPosition(unit.getXPosition() + 1);
 				}
 				if (moveDirection == Direction.NORTHWEST){
-					unit.setyPosition(unit.getyPosition() + 1);
-					unit.setxPosition(unit.getxPosition() - 1);
+					unit.setYPosition(unit.getYPosition() + 1);
+					unit.setXPosition(unit.getXPosition() - 1);
 				}
 				if (moveDirection == Direction.SOUTHWEST){
-					unit.setyPosition(unit.getyPosition() - 1);
-					unit.setxPosition(unit.getxPosition() - 1);
+					unit.setYPosition(unit.getYPosition() - 1);
+					unit.setXPosition(unit.getXPosition() - 1);
 				}
 			}
 		}
 		
-		refreshViews();
+		//refreshViews();
 	}
 	
+	private GameUnit getUnit(int ID) {
+		List<GameUnit> entities = this.getEntities();
+		
+		for (GameUnit entity : entities) {
+			if (entity.getID() == ID) {
+					return entity;
+			}
+		}
+		
+		return null;
+	}
+	
+	/* I don't think we need this anymore
 	/**
 	 * Refreshes the UnitViews based on the current units. Clears the lists, then adds back in any unit that has health > 0
-	 */
+	 
 	private void refreshViews() {
 		
 		if (footmenView != null) {
@@ -259,7 +271,8 @@ public class GameState {
 				archersView.add(archers.get(currentKey).getView());
 		}
 	}
-
+	*/
+	
 	/**
 	 * You will implement this function.
 	 *
@@ -282,7 +295,7 @@ public class GameState {
 	 */
 	public int getUtility() {
 		int distanceFromArchers = 0;
-		for (UnitView footman : footmenView) {
+		for (GameUnit footman : footmen) {
 			distanceFromArchers += minDistanceFromArcher(footman);
 		}
 
@@ -308,11 +321,11 @@ public class GameState {
 	// return weight;
 	// }
 
-	private int minDistanceFromArcher(UnitView footman) {
+	private int minDistanceFromArcher(GameUnit footman) {
 		int minDist = Integer.MAX_VALUE;
 		int nextDist = 0;
 		// Find the closest distance between footman and archers
-		for (UnitView archer : archersView) {
+		for (GameUnit archer : archers) {
 			nextDist = Math.max(
 					Math.abs(footman.getXPosition() - archer.getXPosition()),
 					Math.abs(footman.getYPosition() - archer.getYPosition()));
@@ -351,20 +364,20 @@ public class GameState {
 		int unitTwoID = 0;
 		boolean twoUnits = false;
 		if (isMax) {
-			unitOneID = footmenView.get(0).getID();
-			unitOneActions = getActions(footmenView.get(0), archersView);
+			unitOneID = footmen.get(0).getID();
+			unitOneActions = getActions(footmen.get(0), archers);
 
 			if (footmen.size() > 1) {
-				unitTwoID = footmenView.get(1).getID();
-				unitTwoActions = getActions(footmenView.get(1), archersView);
+				unitTwoID = footmen.get(1).getID();
+				unitTwoActions = getActions(footmen.get(1), archers);
 				twoUnits = true;
 			}
 		} else {
-			unitOneID = archersView.get(0).getID();
-			unitOneActions = getActions(archersView.get(0), footmenView);
+			unitOneID = archers.get(0).getID();
+			unitOneActions = getActions(archers.get(0), footmen);
 			if (archers.size() > 1) {
-				unitTwoID = archersView.get(1).getID();
-				unitTwoActions = getActions(archersView.get(1), footmenView);
+				unitTwoID = archers.get(1).getID();
+				unitTwoActions = getActions(archers.get(1), footmen);
 				twoUnits = true;
 			}
 		}
@@ -413,7 +426,7 @@ public class GameState {
 	}
 
 	private List<Action> getActions(UnitView player, List<UnitView> enemies) {
-		List<UnitView> entities = getEntities();
+		List<GameUnit> entities = getEntities();
 		List<Action> actions = new ArrayList<>();
 
 		int playerX = player.getXPosition();
@@ -429,7 +442,7 @@ public class GameState {
 		}
 
 		// Add all possible attacks to the action list for this player
-		for (UnitView enemy : enemiesInRange(player)) {
+		for (GameUnit enemy : enemiesInRange(player)) {
 			actions.add(Action.createCompoundAttack(player.getID(),
 					enemy.getID()));
 		}
@@ -451,11 +464,11 @@ public class GameState {
 	public boolean moveToSameLocation(Action moveActionOne, Action moveActionTwo) {
 		DirectedAction dActionOne = (DirectedAction) moveActionOne;
 		DirectedAction dActionTwo = (DirectedAction) moveActionTwo;
-		List<UnitView> units;
+		List<GameUnit> units;
 		if (isMax){
-			units = footmenView;
+			units = footmen;
 		} else {
-			units = archersView;
+			units = archers;
 		}
 		
 		int xOne = units.get(0).getXPosition()
@@ -482,7 +495,7 @@ public class GameState {
 	 * @return whether the given x and y coordinates lead to a possible move
 	 *         that is not currently blocked by another entity
 	 */
-	public boolean possibleMove(int x, int y, List<UnitView> entities) {
+	public boolean possibleMove(int x, int y, List<GameUnit> entities) {
 		boolean isPossible = true;
 
 		// check if the location is on the map
@@ -490,7 +503,7 @@ public class GameState {
 			isPossible = false;
 		} else {
 			// check if an entity is already at the desired move location
-			ENTITY_LOOP: for (UnitView entity : entities) {
+			ENTITY_LOOP: for (GameUnit entity : entities) {
 				if (entity.getXPosition() == x && entity.getYPosition() == y) {
 					isPossible = false;
 					break ENTITY_LOOP;
@@ -500,22 +513,22 @@ public class GameState {
 		return isPossible;
 	}
 
-	private List<UnitView> enemiesInRange(UnitView player) {
+	private List<GameUnit> enemiesInRange(UnitView player) {
 		int range = 0;
 		int xDiff = 0;
 		int yDiff = 0;
-		List<UnitView> enemies;
-		List<UnitView> enemiesInRange = new ArrayList<>();
+		List<GameUnit> enemies;
+		List<GameUnit> enemiesInRange = new ArrayList<>();
 
 		if (isMax) {
-			enemies = archersView;
+			enemies = archers;
 			range = FOOTMAN_RANGE;
 		} else {
-			enemies = footmenView;
+			enemies = footmen;
 			range = ARCHER_RANGE;
 		}
 
-		for (UnitView enemy : enemies) {
+		for (GameUnit enemy : enemies) {
 			xDiff = Math.abs(player.getXPosition() - enemy.getXPosition());
 			yDiff = Math.abs(player.getYPosition() - enemy.getYPosition());
 			if (range >= (xDiff + yDiff)) {
