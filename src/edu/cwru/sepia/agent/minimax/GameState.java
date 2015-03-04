@@ -12,6 +12,7 @@ import edu.cwru.sepia.util.Direction;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * This class stores all of the information the agent needs to know about the
@@ -40,6 +41,8 @@ public class GameState {
 	private boolean isMax = true;
 	
 	private State state;
+	Unit footman;
+	private Collection<Unit> footmenKeySet;
 	/**
 	 * You will implement this constructor. It will extract all of the needed
 	 * state information from the built in SEPIA state view.
@@ -64,12 +67,18 @@ public class GameState {
 	 *            Current state of the episode
 	 * @throws IOException 
 	 */
-	public GameState(State.StateView stateView) throws IOException {
+	public GameState(State.StateView stateView) throws IOException{
 		StateCreator creator = stateView.getStateCreator();
 		this.state = creator.createState();
 		
 		footmen = state.getUnits(footmanNum);
 		archers = state.getUnits(archerNum);
+		
+		if (footmen.size() == 0 || archers.size() == 0)
+			System.err.println("No footmen and/or no archers found");
+		
+		footmenKeySet = footmen.values();
+		footman = footmen.get(0);
 		
 		refreshViews();
 		
@@ -222,10 +231,14 @@ public class GameState {
 	 */
 	private void refreshViews() {
 		
-		if (footmenView != null)
+		if (footmenView != null) {
 			footmenView.clear();
-		else
+			System.out.println("footmenView cleared");
+		}
+		else {
 			footmenView = new ArrayList<UnitView>();
+			System.out.println("created footmenView arrayList");
+		}
 		if (archersView != null)
 			archersView.clear();
 		else
