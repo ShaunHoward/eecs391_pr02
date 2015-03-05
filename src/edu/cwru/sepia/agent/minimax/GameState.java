@@ -1,20 +1,25 @@
 package edu.cwru.sepia.agent.minimax;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Set;
+import java.util.Stack;
+
 import edu.cwru.sepia.action.Action;
 import edu.cwru.sepia.action.ActionType;
 import edu.cwru.sepia.action.DirectedAction;
 import edu.cwru.sepia.action.TargetedAction;
 import edu.cwru.sepia.environment.model.state.ResourceNode.ResourceView;
 import edu.cwru.sepia.environment.model.state.State;
-import edu.cwru.sepia.environment.model.state.StateCreator;
 import edu.cwru.sepia.environment.model.state.Unit;
-import edu.cwru.sepia.environment.model.state.Unit.UnitView;
 import edu.cwru.sepia.util.Direction;
 import edu.cwru.sepia.util.DistanceMetrics;
-
-import java.io.IOException;
-import java.util.*;
-import java.util.Map.Entry;
 
 /**
  * This class stores all of the information the agent needs to know about the
@@ -256,7 +261,6 @@ public class GameState implements Comparable<GameState> {
 	 * Returns whether or not a state is terminal
 	 * @return True if the state is terminal, false otherwise
 	 */
-	//TODO: Needs to include the depth limit
 	public boolean isTerminal() {
 		return footmen.isEmpty() || archers.isEmpty();
 	}
@@ -555,6 +559,10 @@ public class GameState implements Comparable<GameState> {
 		int playerX = player.getX();
 		int playerY = player.getY();
 
+		Stack<MapLocation> aStarPath = findPath(obstacles, player, getClosestEnemy(player, enemies));
+		MapLocation nextLoc = aStarPath.pop();
+		actions.add(Action.createPrimitiveMove(player.getID(), getMoveDirection(player, nextLoc)));
+		/*
 		// Add all possible moves to the action list for this player
 		for (Direction direction : validDirections) {
 			if (possibleMove(playerX + direction.xComponent(), playerY
@@ -563,7 +571,8 @@ public class GameState implements Comparable<GameState> {
 						direction));
 			}
 		}
-
+		*/
+		
 		// Add all possible attacks to the action list for this player
 		for (GameUnit enemy : enemiesInRange(player)) {
 			actions.add(Action.createCompoundAttack(player.getID(),
@@ -571,7 +580,43 @@ public class GameState implements Comparable<GameState> {
 		}
 		return actions;
 	}
-
+	
+	private Direction getMoveDirection(GameUnit player, MapLocation nextLoc) {
+		int playerX = player.getX();
+		int playerY = player.getY();
+		int nextLocX = nextLoc.x;
+		int nextLocY = nextLoc.y;
+		
+		if (nextLocX == playerX) { //If this is true we are moving either north or south
+			if (playerY - nextLocY == 1)
+				return Direction.NORTH;
+			else if (playerY - nextLocY == -1)
+				return Direction.SOUTH;
+		}
+		else if (nextLocY == playerY) { //If this is true we are moving either east or west
+			if (playerX - nextLocX == 1)
+				return Direction.EAST;
+			else if (playerX - nextLocX == -1)
+				return Direction.WEST;
+		}
+		
+		return null;
+	}
+	private GameUnit getClosestEnemy(GameUnit player, List<GameUnit> enemies) {
+		int minDist = Integer.MAX_VALUE;
+		GameUnit closestEnemy = null;
+		Stack<MapLocation> aStarPath;
+		
+		for (GameUnit enemy : enemies) {
+			aStarPath = findPath(obstacles, player, enemy);
+			if (aStarPath.size() < minDist) {
+				minDist = aStarPath.size();
+				closestEnemy = enemy;
+			}
+		}
+		
+		return closestEnemy;
+	}
 	/**
 	 * Determines if both unit 1 and unit 2 are moving to the same location.
 	 * These units are determined based on whether this game state is a max
