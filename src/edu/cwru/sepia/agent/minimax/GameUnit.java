@@ -10,6 +10,10 @@ public class GameUnit {
 	private int damage;
 	private int ID;
 	
+	/**
+	 * Creates a GameUnit with the same characteristics as the given Unit.UnitView
+	 * @param unit The Unit.UnitView that the GameUnit should be based on
+	 */
 	public GameUnit(Unit.UnitView unit) {
 	
 		UnitTemplateView unitTemplate = unit.getTemplateView();
@@ -21,6 +25,10 @@ public class GameUnit {
 		ID = unit.getID();
 	}
 	
+	/**
+	 * Creates a GameUnit with the same characteristics as the given GameUnit
+	 * @param gUnit The GameUnit that the new GameUnit should be based
+	 */
 	public GameUnit(GameUnit gUnit){
 		this.x = gUnit.getX();
 		this.y = gUnit.getY();

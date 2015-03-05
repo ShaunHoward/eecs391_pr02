@@ -62,24 +62,30 @@ public class GameState implements Comparable<GameState> {
 	 * unit deals unitView.getTemplateView().getBaseHealth(): The maximum amount
 	 * of health of this unit
 	 *
-	 * @param state
-	 *            Current state of the episode
-	 * @throws IOException
+	 * @param state Current state of the episode
+	 * @throws IOException 
 	 */
-	public GameState(State.StateView stateView) {
+	public GameState(State.StateView stateView){
+		//Lists of the GameUnits that will be used to track the state
+
 		footmen = new ArrayList<GameUnit>();
 		archers = new ArrayList<GameUnit>();
+		
+		//Lists of the UnitView from which the GameUnits will be made
 		List<Unit.UnitView> footmenUnitView = stateView.getUnits(footmanNum);
 		List<Unit.UnitView> archersUnitView = stateView.getUnits(archerNum);
-
+		
+		//Create the footman GameUnits
 		for (Unit.UnitView footman : footmenUnitView) {
 			footmen.add(new GameUnit(footman));
 		}
-
+		
+		//Create the archer GameUnits
 		for (Unit.UnitView archer : archersUnitView) {
 			archers.add(new GameUnit(archer));
 		}
-
+		
+		//Determine map limits and valid move directions
 		xExtent = stateView.getXExtent();
 		yExtent = stateView.getYExtent();
 		this.validDirections = createValidDirectionsList();
@@ -89,6 +95,11 @@ public class GameState implements Comparable<GameState> {
 		}
 	}
 
+	/**
+	 * Creates a GameState with the assigned depth value
+	 * @param state The state to created the GameState with
+	 * @param depth The specified depth of the GameState
+	 */
 	public GameState(State.StateView state, int depth) {
 		this(state);
 		this.depth = depth;
@@ -102,16 +113,26 @@ public class GameState implements Comparable<GameState> {
 		this.validDirections = createValidDirectionsList();
 		this.obstacles = new ArrayList<>();
 	}
-
-	public GameState(GameState parent) {
+	
+	/**
+	 * Creates a child game state from a parent game state, same values but depth is one deeper
+	 * @param parent The parent GameState
+	 */
+	public GameState(GameState parent){
+		//Initializes all footmen and archers to the same as the parent
 		this.footmen = new ArrayList<GameUnit>();
 		for (GameUnit unit : parent.footmen) {
 			this.footmen.add(new GameUnit(unit));
 		}
+		
 		this.archers = new ArrayList<GameUnit>();
 		for (GameUnit unit : parent.archers) {
 			this.archers.add(new GameUnit(unit));
 		}
+		
+		/**
+		 * Sets map dimensions to same as parent, and depth to parent+1
+		 */
 		this.xExtent = parent.getXExtent();
 		this.yExtent = parent.getYExtent();
 		this.depth = parent.getDepth() + 1;
@@ -122,7 +143,13 @@ public class GameState implements Comparable<GameState> {
 		}
 	}
 
-	public List<Direction> createValidDirectionsList() {
+	
+	/**
+	 * Gets a list of all valid directions for movement in the state
+	 * @return A list of valid movement directions
+	 */
+	public List<Direction> createValidDirectionsList(){
+
 		List<Direction> validDirections = new ArrayList<>();
 		for (Direction dir : Direction.values()) {
 			if (isValidDirection(dir)) {
@@ -131,7 +158,12 @@ public class GameState implements Comparable<GameState> {
 		}
 		return validDirections;
 	}
-
+	
+	/**
+	 * Checks if directions are valid, only allowed movement are N,E,S,W
+	 * @param direction The direction whose validity is being checked
+	 * @return True if the direction is valid, false otherwise
+	 */
 	private boolean isValidDirection(Direction direction) {
 		return direction == Direction.NORTH || direction == Direction.EAST
 				|| direction == Direction.WEST || direction == Direction.SOUTH;
@@ -173,6 +205,10 @@ public class GameState implements Comparable<GameState> {
 		this.depth = depth;
 	}
 
+	/**
+	 * Gets the total health of all footmen
+	 * @return int Total health of all footmen
+	 */
 	public int getFootmenHealth() {
 		int totalHealth = 0;
 		for (GameUnit footman : footmen) {
@@ -181,6 +217,10 @@ public class GameState implements Comparable<GameState> {
 		return totalHealth;
 	}
 
+	/**
+	 * Gets the total health of all archers
+	 * @return in Total health of all archers
+	 */
 	public int getArcherHealth() {
 		int totalHealth = 0;
 		for (GameUnit archer : archers) {
@@ -189,21 +229,28 @@ public class GameState implements Comparable<GameState> {
 		return totalHealth;
 	}
 
+	/**
+	 * Returns a list of all GameUnits in the game, bother archers and footmen
+	 * @return List<GameUnit> All GameUnits in the state
+	 */
 	public List<GameUnit> getEntities() {
 		List<GameUnit> entities = new ArrayList<>(footmen);
 		entities.addAll(archers);
 		return entities;
 	}
 
+	/**
+	 * Returns whether or not a state is terminal
+	 * @return True if the state is terminal, false otherwise
+	 */
+	//TODO: Needs to include the depth limit
 	public boolean isTerminal() {
 		return footmen.isEmpty() || archers.isEmpty();
 	}
 
 	/**
 	 * Applies actions to the state
-	 * 
-	 * @param actions
-	 *            The actions to be applied
+	 * @param actions The actions to be applied
 	 */
 	public void applyActions(Map<Integer, Action> actions) {
 		Set<Integer> keySet = actions.keySet(); // Gets set of all keys
