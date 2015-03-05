@@ -390,13 +390,18 @@ public class GameState implements Comparable<GameState> {
 			//Manhattan Distance implementation
 			//nextDist = Math.abs(xDiff) + Math.abs(yDiff);
 			//Euclidean Distance Implementation
-			//minDist = Math.sqrt(Math.pow(Math.abs(xDiff),2)+Math.pow(Math.abs(yDiff), 2));
-			//A star search method
-			Stack<MapLocation> aStarPath = aStarAgent.findPath(obstacles, footman, archer);
-			if (aStarPath != null){
-				minDist = aStarPath.size();
-			} else {
-				minDist = 50;
+			
+			if (obstacles.size() > 0) {
+				Stack<MapLocation> aStarPath = aStarAgent.findPath(obstacles, footman, archer);
+				if (aStarPath != null){
+					minDist = aStarPath.size();
+				} 
+				else {
+					minDist = 50;
+				}
+			}
+			else {
+				minDist = Math.sqrt(Math.pow(Math.abs(xDiff),2)+Math.pow(Math.abs(yDiff), 2));
 			}
 		} else {
 			if (archers.size()>1){
