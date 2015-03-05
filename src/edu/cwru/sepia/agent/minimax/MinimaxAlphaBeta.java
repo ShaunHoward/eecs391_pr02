@@ -8,6 +8,8 @@ import edu.cwru.sepia.environment.model.state.State;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +46,7 @@ public class MinimaxAlphaBeta extends Agent {
 			        new GameStateChild(new HashMap<Integer, Action>(), new GameState(Integer.MIN_VALUE)),
 			        new GameStateChild(new HashMap<Integer, Action>(), new GameState(Integer.MAX_VALUE)));
 		} catch (IOException e) {
-			System.out.println("ÏOException thrown");
+			System.out.println("ï¿½OException thrown");
 		}
 
         return bestChild.action;
@@ -126,7 +128,18 @@ public class MinimaxAlphaBeta extends Agent {
      */
     public List<GameStateChild> orderChildrenWithHeuristics(List<GameStateChild> children)
     {
-        return children;
+    	Map<GameState, Map<Integer, Action>> stateChildMap = new HashMap<>();
+    	List<GameState> stateList = new ArrayList<>();
+    	List<GameStateChild> childList = new ArrayList<>();
+        for (GameStateChild child : children){
+        	stateChildMap.put(child.state, child.action);
+        	stateList.add(child.state);
+        }
+        Collections.sort(stateList);
+        for (GameState state : stateList){
+        	childList.add(new GameStateChild(stateChildMap.get(state), state));
+        }
+    	return childList;
     }
     
 //    public GameStateChild minimax(GameStateChild node, int depth, boolean maximizingPlayer){
