@@ -566,11 +566,18 @@ public class GameState implements Comparable<GameState> {
 
 		Stack<MapLocation> aStarPath = aStarAgent.findPath(obstacles, player, getClosestEnemy(player, enemies));
 		//*****NEED TO CHECK IF PATH IS EMPTY!
-		if (aStarPath != null && !aStarPath.isEmpty()){
-		MapLocation nextLoc = aStarPath.pop();
-		actions.add(Action.createPrimitiveMove(player.getID(), getMoveDirection(player, nextLoc)));
-		} else {
-		
+//<<<<<<< HEAD
+//		if (aStarPath != null && !aStarPath.isEmpty()){
+//		MapLocation nextLoc = aStarPath.pop();
+//		actions.add(Action.createPrimitiveMove(player.getID(), getMoveDirection(player, nextLoc)));
+//		} else {
+//		
+//=======
+		if (aStarPath.size() > 0) {
+			MapLocation nextLoc = aStarPath.pop();
+			actions.add(Action.createPrimitiveMove(player.getID(), getMoveDirection(player, nextLoc)));
+		}
+		/*
 		// Add all possible moves to the action list for this player
 		for (Direction direction : validDirections) {
 			if (possibleMove(playerX + direction.xComponent(), playerY
@@ -579,7 +586,7 @@ public class GameState implements Comparable<GameState> {
 						direction));
 			}
 		}
-		}
+		} */
 		
 		// Add all possible attacks to the action list for this player
 		for (GameUnit enemy : enemiesInRange(player)) {
