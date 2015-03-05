@@ -24,6 +24,8 @@ import java.util.Map.Entry;
  * delete or change the signatures of the provided methods.
  */
 public class GameState implements Comparable<GameState> {
+	
+	//Constants necessary for weighted utility function
 	private static final int W_FOOTMAN_HP = 1;
 	private static final int W_FOOTMAN_DISTANCE = -1;
 	private static final int W_ARCHER_HP = -10;
@@ -32,6 +34,8 @@ public class GameState implements Comparable<GameState> {
 	private static final int FOOTMAN_RANGE = 1;
 	private static final int ARCHER_RANGE = 12;
 
+	//Game state variables including units, depth, utility, map
+	//properties and valid directions to move in.
 	public int xExtent = 0, yExtent = 0;
 	public List<GameUnit> footmen, archers;
 	private int footmanNum = 0;
@@ -105,7 +109,11 @@ public class GameState implements Comparable<GameState> {
 		this.depth = depth;
 	}
 
-	// We need this constructor to initialize the A/B search
+	/**
+	 * Constructor used to initialize the A/B search
+	 * 
+	 * @param utility - the initial utility of this game state
+	 */
 	public GameState(Integer utility) {
 		this.utility = utility;
 		footmen = new ArrayList<GameUnit>();
@@ -136,7 +144,11 @@ public class GameState implements Comparable<GameState> {
 		this.xExtent = parent.getXExtent();
 		this.yExtent = parent.getYExtent();
 		this.depth = parent.getDepth() + 1;
+		
+		//Finds the directions valid to move in
 		this.validDirections = createValidDirectionsList();
+		
+		//Finds the obstacles on the map and recognizes them
 		this.obstacles = new ArrayList<ResourceView>();
 		for (ResourceView rView : parent.obstacles){
 			this.obstacles.add(rView);
@@ -262,6 +274,7 @@ public class GameState implements Comparable<GameState> {
 			Action currentAction = actions.get(currentKey);
 			ActionType currentActionType = currentAction.getType();
 
+			//Apply the attack action and deduct health from opponent
 			if (currentActionType == ActionType.COMPOUNDATTACK) {
 				TargetedAction currentTargetedAction = (TargetedAction) currentAction;
 				int unitId = currentTargetedAction.getUnitId();
@@ -272,6 +285,7 @@ public class GameState implements Comparable<GameState> {
 
 				target.setHP(target.getHP() - unit.getDamage());
 			} else if (currentActionType == ActionType.PRIMITIVEMOVE) {
+				//Move the current unit in the desired direction
 				DirectedAction currentDirectedAction = (DirectedAction) currentAction;
 				int unitID = currentDirectedAction.getUnitId();
 				GameUnit unit = getUnit(unitID);
@@ -294,31 +308,6 @@ public class GameState implements Comparable<GameState> {
 
 		return null;
 	}
-
-	/*
-	 * I don't think we need this anymore /** Refreshes the UnitViews based on
-	 * the current units. Clears the lists, then adds back in any unit that has
-	 * health > 0
-	 * 
-	 * private void refreshViews() {
-	 * 
-	 * if (footmenView != null) { footmenView.clear();
-	 * System.out.println("footmenView cleared"); } else { footmenView = new
-	 * ArrayList<UnitView>();
-	 * System.out.println("created footmenView arrayList"); } if (archersView !=
-	 * null) archersView.clear(); else archersView = new ArrayList<UnitView>();
-	 * 
-	 * Iterator<Integer> footmenItr = footmen.keySet().iterator();
-	 * Iterator<Integer> archersItr = archers.keySet().iterator();
-	 * 
-	 * while (footmenItr.hasNext()) { Integer currentKey = footmenItr.next(); if
-	 * (footmen.get(currentKey).getCurrentHealth() > 0)
-	 * footmenView.add(footmen.get(currentKey).getView()); }
-	 * 
-	 * while (archersItr.hasNext()) { Integer currentKey = archersItr.next(); if
-	 * (archers.get(currentKey).getCurrentHealth() > 0)
-	 * archersView.add(archers.get(currentKey).getView()); } }
-	 */
 
 	/**
 	 * You will implement this function.
