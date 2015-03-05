@@ -4,6 +4,7 @@ import edu.cwru.sepia.action.Action;
 import edu.cwru.sepia.action.ActionType;
 import edu.cwru.sepia.action.DirectedAction;
 import edu.cwru.sepia.action.TargetedAction;
+import edu.cwru.sepia.environment.model.state.ResourceNode.ResourceView;
 import edu.cwru.sepia.environment.model.state.State;
 import edu.cwru.sepia.environment.model.state.StateCreator;
 import edu.cwru.sepia.environment.model.state.Unit;
@@ -22,7 +23,7 @@ import java.util.Map.Entry;
  * Add any information or methods you would like to this class, but do not
  * delete or change the signatures of the provided methods.
  */
-public class GameState implements Comparable<GameState>{
+public class GameState implements Comparable<GameState> {
 	private static final int W_FOOTMAN_HP = 1;
 	private static final int W_FOOTMAN_DISTANCE = -1;
 	private static final int W_ARCHER_HP = -10;
@@ -39,6 +40,7 @@ public class GameState implements Comparable<GameState>{
 	private int utility = 0;
 	private boolean isMax = true;
 	private List<Direction> validDirections;
+	private List<ResourceView> obstacles;
 
 	/**
 	 * You will implement this constructor. It will extract all of the needed
@@ -51,8 +53,8 @@ public class GameState implements Comparable<GameState>{
 	 * state.getResourceNode(Integer resourceID): Return a ResourceView for the
 	 * given ID
 	 *
-	 * For a given ResourceView you can query the  using
-	 * resource.getX() and resource.getY()
+	 * For a given ResourceView you can query the using resource.getX() and
+	 * resource.getY()
 	 *
 	 * For a given unit you will need to find the attack damage, range and max
 	 * HP unitView.getTemplateView().getRange(): This gives you the attack range
@@ -65,6 +67,7 @@ public class GameState implements Comparable<GameState>{
 	 */
 	public GameState(State.StateView stateView){
 		//Lists of the GameUnits that will be used to track the state
+
 		footmen = new ArrayList<GameUnit>();
 		archers = new ArrayList<GameUnit>();
 		
@@ -86,6 +89,10 @@ public class GameState implements Comparable<GameState>{
 		xExtent = stateView.getXExtent();
 		yExtent = stateView.getYExtent();
 		this.validDirections = createValidDirectionsList();
+		this.obstacles = new ArrayList<>();
+		for (ResourceView resource : stateView.getAllResourceNodes()){
+			obstacles.add(resource);
+		}
 	}
 
 	/**
@@ -98,12 +105,13 @@ public class GameState implements Comparable<GameState>{
 		this.depth = depth;
 	}
 
-	//We need this constructor to initialize the A/B search
+	// We need this constructor to initialize the A/B search
 	public GameState(Integer utility) {
 		this.utility = utility;
 		footmen = new ArrayList<GameUnit>();
 		archers = new ArrayList<GameUnit>();
 		this.validDirections = createValidDirectionsList();
+		this.obstacles = new ArrayList<>();
 	}
 	
 	/**
@@ -113,12 +121,12 @@ public class GameState implements Comparable<GameState>{
 	public GameState(GameState parent){
 		//Initializes all footmen and archers to the same as the parent
 		this.footmen = new ArrayList<GameUnit>();
-		for (GameUnit unit : parent.footmen){
+		for (GameUnit unit : parent.footmen) {
 			this.footmen.add(new GameUnit(unit));
 		}
 		
 		this.archers = new ArrayList<GameUnit>();
-		for (GameUnit unit : parent.archers){
+		for (GameUnit unit : parent.archers) {
 			this.archers.add(new GameUnit(unit));
 		}
 		
@@ -129,16 +137,22 @@ public class GameState implements Comparable<GameState>{
 		this.yExtent = parent.getYExtent();
 		this.depth = parent.getDepth() + 1;
 		this.validDirections = createValidDirectionsList();
+		this.obstacles = new ArrayList<ResourceView>();
+		for (ResourceView rView : parent.obstacles){
+			this.obstacles.add(rView);
+		}
 	}
+
 	
 	/**
 	 * Gets a list of all valid directions for movement in the state
 	 * @return A list of valid movement directions
 	 */
 	public List<Direction> createValidDirectionsList(){
+
 		List<Direction> validDirections = new ArrayList<>();
-		for (Direction dir : Direction.values()){
-			if (isValidDirection(dir)){
+		for (Direction dir : Direction.values()) {
+			if (isValidDirection(dir)) {
 				validDirections.add(dir);
 			}
 		}
@@ -150,18 +164,16 @@ public class GameState implements Comparable<GameState>{
 	 * @param direction The direction whose validity is being checked
 	 * @return True if the direction is valid, false otherwise
 	 */
-	private boolean isValidDirection(Direction direction){
-		return direction == Direction.NORTH || 
-				direction == Direction.EAST ||
-				direction == Direction.WEST ||
-				direction == Direction.SOUTH;
+	private boolean isValidDirection(Direction direction) {
+		return direction == Direction.NORTH || direction == Direction.EAST
+				|| direction == Direction.WEST || direction == Direction.SOUTH;
 	}
 
 	public int getXExtent() {
 		return xExtent;
 	}
-	
-	public List<Direction> getValidDirections(){
+
+	public List<Direction> getValidDirections() {
 		return this.validDirections;
 	}
 
@@ -235,89 +247,93 @@ public class GameState implements Comparable<GameState>{
 	public boolean isTerminal() {
 		return footmen.isEmpty() || archers.isEmpty();
 	}
-	
+
 	/**
 	 * Applies actions to the state
+<<<<<<< HEAD
 	 * @param actions The actions to be applied
+=======
+	 * 
+	 * @param actions
+	 *            The actions to be applied
+>>>>>>> 3f6fa9ca749f7ad8192a5fa31fa2cd22a1fad433
 	 */
-	public void applyActions(Map<Integer, Action> actions){
-		Set<Integer> keySet = actions.keySet(); //Gets set of all keys contained in the map
+	public void applyActions(Map<Integer, Action> actions) {
+		Set<Integer> keySet = actions.keySet(); // Gets set of all keys
+												// contained in the map
 		Iterator<Integer> keySetItr = keySet.iterator();
-		
-		while (keySetItr.hasNext()){
+
+		while (keySetItr.hasNext()) {
 			Integer currentKey = keySetItr.next();
 			Action currentAction = actions.get(currentKey);
 			ActionType currentActionType = currentAction.getType();
-			
+
 			if (currentActionType == ActionType.COMPOUNDATTACK) {
-				TargetedAction currentTargetedAction = (TargetedAction) currentAction; //There might be a better way to do this
+				TargetedAction currentTargetedAction = (TargetedAction) currentAction; // There
+																						// might
+																						// be
+																						// a
+																						// better
+																						// way
+																						// to
+																						// do
+																						// this
 				int unitId = currentTargetedAction.getUnitId();
 				int targetId = currentTargetedAction.getTargetId();
-				
+
 				GameUnit unit = getUnit(unitId);
 				GameUnit target = getUnit(targetId);
-				
+
 				target.setHP(target.getHP() - unit.getDamage());
 			} else if (currentActionType == ActionType.PRIMITIVEMOVE) {
 				DirectedAction currentDirectedAction = (DirectedAction) currentAction;
 				int unitID = currentDirectedAction.getUnitId();
 				GameUnit unit = getUnit(unitID);
 				Direction moveDirection = currentDirectedAction.getDirection();
-				
+
 				unit.setY(unit.getX() + moveDirection.xComponent());
 				unit.setY(unit.getY() + moveDirection.yComponent());
 			}
 		}
 	}
-	
+
 	private GameUnit getUnit(int ID) {
 		List<GameUnit> entities = this.getEntities();
-		
+
 		for (GameUnit entity : entities) {
 			if (entity.getID() == ID) {
-					return entity;
+				return entity;
 			}
 		}
-		
+
 		return null;
 	}
-	
-	/* I don't think we need this anymore
-	/**
-	 * Refreshes the UnitViews based on the current units. Clears the lists, then adds back in any unit that has health > 0
-	 
-	private void refreshViews() {
-		
-		if (footmenView != null) {
-			footmenView.clear();
-			System.out.println("footmenView cleared");
-		}
-		else {
-			footmenView = new ArrayList<UnitView>();
-			System.out.println("created footmenView arrayList");
-		}
-		if (archersView != null)
-			archersView.clear();
-		else
-			archersView = new ArrayList<UnitView>();
-		
-		Iterator<Integer> footmenItr = footmen.keySet().iterator();
-		Iterator<Integer> archersItr = archers.keySet().iterator();
-		
-		while (footmenItr.hasNext()) {
-			Integer currentKey = footmenItr.next();
-			if (footmen.get(currentKey).getCurrentHealth() > 0)
-				footmenView.add(footmen.get(currentKey).getView());
-		}
-		
-		while (archersItr.hasNext()) {
-			Integer currentKey = archersItr.next();
-			if (archers.get(currentKey).getCurrentHealth() > 0)
-				archersView.add(archers.get(currentKey).getView());
-		}
-	}
-	*/
-	
+
+	/*
+	 * I don't think we need this anymore /** Refreshes the UnitViews based on
+	 * the current units. Clears the lists, then adds back in any unit that has
+	 * health > 0
+	 * 
+	 * private void refreshViews() {
+	 * 
+	 * if (footmenView != null) { footmenView.clear();
+	 * System.out.println("footmenView cleared"); } else { footmenView = new
+	 * ArrayList<UnitView>();
+	 * System.out.println("created footmenView arrayList"); } if (archersView !=
+	 * null) archersView.clear(); else archersView = new ArrayList<UnitView>();
+	 * 
+	 * Iterator<Integer> footmenItr = footmen.keySet().iterator();
+	 * Iterator<Integer> archersItr = archers.keySet().iterator();
+	 * 
+	 * while (footmenItr.hasNext()) { Integer currentKey = footmenItr.next(); if
+	 * (footmen.get(currentKey).getCurrentHealth() > 0)
+	 * footmenView.add(footmen.get(currentKey).getView()); }
+	 * 
+	 * while (archersItr.hasNext()) { Integer currentKey = archersItr.next(); if
+	 * (archers.get(currentKey).getCurrentHealth() > 0)
+	 * archersView.add(archers.get(currentKey).getView()); } }
+	 */
+
 	/**
 	 * You will implement this function.
 	 *
@@ -339,12 +355,14 @@ public class GameState implements Comparable<GameState>{
 	 * @return The weighted linear combination of the features
 	 */
 	public int getUtility() {
-		if (utility == 0){
+		if (utility == 0) {
 			int distanceFromArchers = 0;
-			for (GameUnit footman : footmen) {
-				distanceFromArchers += minDistanceFromArcher(footman);
+			if (isMax){
+				for (GameUnit footman : footmen) {
+					distanceFromArchers += minDistanceFromArcher(footman);
+				}
 			}
-	
+
 			utility = ((W_FOOTMAN_HP * getFootmenHealth())
 					+ (W_ARCHER_HP * getArcherHealth())
 					+ (W_FOOTMAN_DISTANCE * distanceFromArchers)
@@ -354,28 +372,27 @@ public class GameState implements Comparable<GameState>{
 		return utility;
 	}
 
-//	 public int getUtility(){
-//		 if (weight == Integer.MIN_VALUE){
-//		 weight = 0;
-//		 GameUnit a = archers.get(0);
-//		 GameUnit f1 = footmen.get(0);
-//		 GameUnit f2 = footmen.get(1);
-//		 int dx1 = Math.abs(a.getX() - f1.getX());
-//		 int dy1 = Math.abs(a.getY() - f1.getY());
-//		 int dx2 = Math.abs(a.getX() - f2.getX());
-//		 int dy2 = Math.abs(a.getY() - f2.getY());
-//		 weight -= dx1 * 10 + dy1 + dx2 + dy2 * 10;
-//		 }
-//		 return weight;
-//	 }
+	// public int getUtility(){
+	// if (weight == Integer.MIN_VALUE){
+	// weight = 0;
+	// GameUnit a = archers.get(0);
+	// GameUnit f1 = footmen.get(0);
+	// GameUnit f2 = footmen.get(1);
+	// int dx1 = Math.abs(a.getX() - f1.getX());
+	// int dy1 = Math.abs(a.getY() - f1.getY());
+	// int dx2 = Math.abs(a.getX() - f2.getX());
+	// int dy2 = Math.abs(a.getY() - f2.getY());
+	// weight -= dx1 * 10 + dy1 + dx2 + dy2 * 10;
+	// }
+	// return weight;
+	// }
 
 	private int minDistanceFromArcher(GameUnit footman) {
 		int minDist = Integer.MAX_VALUE;
 		int nextDist = 0;
 		// Find the closest distance between footman and archers
 		for (GameUnit archer : archers) {
-			nextDist = Math.min(
-					Math.abs(footman.getX() - archer.getX()),
+			nextDist = Math.min(Math.abs(footman.getX() - archer.getX()),
 					Math.abs(footman.getY() - archer.getY()));
 			if (nextDist < minDist) {
 				minDist = nextDist;
@@ -398,8 +415,8 @@ public class GameState implements Comparable<GameState>{
 	 *
 	 * for(Direction direction : Directions.values())
 	 *
-	 * To get the resulting  from a move in that direction you can do
-	 * the following x += direction.xComponent() y += direction.yComponent()
+	 * To get the resulting from a move in that direction you can do the
+	 * following x += direction.xComponent() y += direction.yComponent()
 	 *
 	 * @return All possible actions and their associated resulting game state
 	 */
@@ -430,47 +447,80 @@ public class GameState implements Comparable<GameState>{
 			}
 		}
 
-		// Now we have a list of action maps for each game state
-		
-		for (Action unitOneAction : unitOneActions) {
-			Map<Integer, Action> u1ActionMap = new HashMap<>();
-			u1ActionMap.put(unitOneID, unitOneAction);
-			action.add(u1ActionMap);
-		}
+		List<GameStateChild> children = new ArrayList<>();
+		Map<Integer, Action> actionMap = new HashMap<>();
 
 		// Make all the possible game states, eliminating those options where
 		// player units move to the same location.
 		if (twoUnits) {
-			for (Action unitTwoAction : unitTwoActions) {
-				for (Map<Integer, Action> actionMap : action) {
+			for (Action unitOneAction : unitOneActions) {
+				for (Action unitTwoAction : unitTwoActions) {
+					actionMap = new HashMap<>();
+					actionMap.put(unitOneID, unitOneAction);
 					actionMap.put(unitTwoID, unitTwoAction);
+					if(!badActions(actionMap, unitOneID, unitTwoID)){
+						// ** Need to apply actions to new state
+						GameState newState = new GameState(this);
+						newState.applyActions(actionMap);
+						// ** Then add new state child to list of state children
+						children.add(new GameStateChild(actionMap, newState));
+					}
 				}
 			}
-			Map<Integer, Action> actionMap = new HashMap<>();
-			Iterator<Map<Integer, Action>> actionItr = action.iterator();
-
-			while (actionItr.hasNext()) {
-				actionMap = actionItr.next();
-				Action unitOneAction = actionMap.get(unitOneID);
-				Action unitTwoAction = actionMap.get(unitTwoID);
-				if (unitOneAction.getType() == ActionType.PRIMITIVEMOVE
-						&& unitTwoAction.getType() == ActionType.PRIMITIVEMOVE
-						&& moveToSameLocation(unitOneAction, unitTwoAction)) {
-					actionItr.remove();
-				}
+		} else {
+			for (Action unitOneAction : unitOneActions) {
+				actionMap = new HashMap<>();
+				actionMap.put(unitOneID, unitOneAction);
+				// ** Need to apply actions to new state
+				GameState newState = new GameState(this);
+				newState.applyActions(actionMap);
+				// ** Then add new state child to list of state children
+				children.add(new GameStateChild(actionMap, newState));
 			}
 		}
-		
-		List<GameStateChild> children = new ArrayList<>();
-		for (Map<Integer, Action> actions : action) {
-			//** Need to apply actions to new state
-			GameState newState = new GameState(this);
-			newState.applyActions(actions);
-			//** Then add new state child to list of state children
-			children.add(new GameStateChild(actions, newState));
-		}
-
 		return children;
+	}
+
+	private boolean badActions(Map<Integer, Action> actionMap, int unitOneID,
+			int unitTwoID) {
+
+		Action unitOneAction = actionMap.get(unitOneID);
+		Action unitTwoAction = actionMap.get(unitTwoID);
+
+		if (unitOneAction.getType() == ActionType.PRIMITIVEMOVE
+				&& unitTwoAction.getType() == ActionType.PRIMITIVEMOVE
+				&& moveToSameLocation(unitOneAction, unitOneID, unitTwoAction,
+						unitTwoID)){
+			return true;
+		}
+		for (ResourceView obstacle : obstacles){
+			
+			//might want to check if these are team mates b.c we already check for them 
+			if (moveToSameLocation(obstacle, unitOneAction, unitOneID, unitTwoAction,
+						unitTwoID)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public boolean moveToSameLocation(ResourceView obstacle, Action moveActionOne, int unitIDOne,
+			Action moveActionTwo, int unitIDTwo) {
+		DirectedAction dActionOne = (DirectedAction) moveActionOne;
+		DirectedAction dActionTwo = (DirectedAction) moveActionTwo;
+
+		GameUnit unitOne = getUnit(unitIDOne);
+		GameUnit unitTwo = getUnit(unitIDTwo);
+		int xOne = unitOne.getX() + dActionOne.getDirection().xComponent();
+		int yOne = unitOne.getY() + dActionOne.getDirection().yComponent();
+		int xTwo = unitTwo.getX() + dActionTwo.getDirection().xComponent();
+		int yTwo = unitTwo.getY() + dActionTwo.getDirection().yComponent();
+		int xOb = obstacle.getXPosition();
+		int yOb = obstacle.getYPosition();
+		if ((xOne == xOb && yOne == yOb) || (xTwo == xOb && yTwo == yOb)){
+			return true;
+		}
+		return false;
 	}
 
 	private List<Action> getActions(GameUnit player, List<GameUnit> enemies) {
@@ -498,35 +548,31 @@ public class GameState implements Comparable<GameState>{
 	}
 
 	/**
-	 * Determines if both unit 1 and unit 2 are moving to the same
-	 * location. These units are determined based on whether this
-	 * game state is a max state.
+	 * Determines if both unit 1 and unit 2 are moving to the same location.
+	 * These units are determined based on whether this game state is a max
+	 * state.
 	 * 
 	 * @param moveActionOne
 	 *            - the move action of unit 1
+	 * @param unitIDOne
+	 *            - the id of unit one
 	 * @param moveActionTwo
 	 *            - the move action of unit 2
-	 * @return whether both unit 1 and unit 2 are moving to the same
-	 *         location
+	 * @param unitIDTwo
+	 *            - the id of unit two
+	 * @return whether both unit 1 and unit 2 are moving to the same location
 	 */
-	public boolean moveToSameLocation(Action moveActionOne, Action moveActionTwo) {
+	public boolean moveToSameLocation(Action moveActionOne, int unitIDOne,
+			Action moveActionTwo, int unitIDTwo) {
 		DirectedAction dActionOne = (DirectedAction) moveActionOne;
 		DirectedAction dActionTwo = (DirectedAction) moveActionTwo;
-		List<GameUnit> units;
-		if (isMax){
-			units = footmen;
-		} else {
-			units = archers;
-		}
-		
-		int xOne = units.get(0).getX()
-				+ dActionOne.getDirection().xComponent();
-		int yOne = units.get(0).getY()
-				+ dActionOne.getDirection().yComponent();
-		int xTwo = units.get(1).getX()
-				+ dActionTwo.getDirection().xComponent();
-		int yTwo = units.get(1).getY()
-				+ dActionTwo.getDirection().yComponent();
+
+		GameUnit unitOne = getUnit(unitIDOne);
+		GameUnit unitTwo = getUnit(unitIDTwo);
+		int xOne = unitOne.getX() + dActionOne.getDirection().xComponent();
+		int yOne = unitOne.getY() + dActionOne.getDirection().yComponent();
+		int xTwo = unitTwo.getX() + dActionTwo.getDirection().xComponent();
+		int yTwo = unitTwo.getY() + dActionTwo.getDirection().yComponent();
 		return (xOne == xTwo) && (yOne == yTwo);
 	}
 
@@ -551,8 +597,7 @@ public class GameState implements Comparable<GameState>{
 			isPossible = false;
 		} else {
 			// check if an entity is already at the desired move location
-			ENTITY_LOOP: 
-			for (GameUnit entity : entities) {
+			ENTITY_LOOP: for (GameUnit entity : entities) {
 				if (entity.getX() == x && entity.getY() == y) {
 					isPossible = false;
 					break ENTITY_LOOP;
@@ -586,32 +631,32 @@ public class GameState implements Comparable<GameState>{
 		}
 		return enemiesInRange;
 	}
-	
+
 	@Override
-	public boolean equals(Object o){
-		if (o instanceof GameState){
-			GameState state = (GameState)o;
-			return this.footmen.equals(state.footmen) &&
-					this.archers.equals(state.archers) &&
-					this.depth == state.depth &&
-					this.getUtility() == state.getUtility() &&
-					this.isMax == state.isMax;
+	public boolean equals(Object o) {
+		if (o instanceof GameState) {
+			GameState state = (GameState) o;
+			return this.footmen.equals(state.footmen)
+					&& this.archers.equals(state.archers)
+					&& this.depth == state.depth
+					&& this.getUtility() == state.getUtility()
+					&& this.isMax == state.isMax;
 		}
 		return false;
 	}
 
 	@Override
 	public int compareTo(GameState state) {
-		//Compare utilities of states to order them
+		// Compare utilities of states to order them
 		return new Integer(this.getUtility()).compareTo(state.getUtility());
 	}
-	
-	public int hashcode(){
+
+	public int hashcode() {
 		int hashcode = footmen.size() + archers.size();
 		hashcode *= 31;
 		hashcode += depth * 31;
 		hashcode += getUtility() * 31;
-		if (isMax){
+		if (isMax) {
 			hashcode += 3 * (53 + 31);
 		}
 		return hashcode;
