@@ -10,7 +10,7 @@ public class GameUnit {
 	private int damage;
 	private int ID;
 	
-	GameUnit(Unit.UnitView unit) {
+	public GameUnit(Unit.UnitView unit) {
 	
 		UnitTemplateView unitTemplate = unit.getTemplateView();
 		
@@ -19,6 +19,14 @@ public class GameUnit {
 		HP = unit.getHP();
 		damage = unitTemplate.getBasicAttack() + unitTemplate.getPiercingAttack();
 		ID = unit.getID();
+	}
+	
+	public GameUnit(GameUnit gUnit){
+		this.x = gUnit.getX();
+		this.y = gUnit.getY();
+		this.HP = gUnit.getHP();
+		this.damage = gUnit.getDamage();
+		this.ID = gUnit.getID();
 	}
 	
 	public int getX() {

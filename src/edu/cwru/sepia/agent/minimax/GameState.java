@@ -36,8 +36,9 @@ public class GameState implements Comparable<GameState>{
 	private int footmanNum = 0;
 	private int archerNum = 1;
 	private int depth = 0;
-	private int utility = Integer.MIN_VALUE;
+	private int utility = 0;
 	private boolean isMax = true;
+	private List<Direction> validDirections;
 
 	/**
 	 * You will implement this constructor. It will extract all of the needed
@@ -79,32 +80,60 @@ public class GameState implements Comparable<GameState>{
 		
 		xExtent = stateView.getXExtent();
 		yExtent = stateView.getYExtent();
+		this.validDirections = createValidDirectionsList();
 	}
 
-	public GameState(State.StateView state, int depth) throws IOException {
+	public GameState(State.StateView state, int depth) {
 		this(state);
 		this.depth = depth;
 	}
 
 	//We need this constructor to initialize the A/B search
-	public GameState(Integer weight) {
+	public GameState(Integer utility) {
 		this.utility = utility;
 		footmen = new ArrayList<GameUnit>();
 		archers = new ArrayList<GameUnit>();
+		this.validDirections = createValidDirectionsList();
 	}
 	
 	public GameState(GameState parent){
 		this.footmen = new ArrayList<GameUnit>();
-		this.footmen.addAll(parent.footmen);
+		for (GameUnit unit : parent.footmen){
+			this.footmen.add(new GameUnit(unit));
+		}
 		this.archers = new ArrayList<GameUnit>();
-		this.archers.addAll(parent.archers);
+		for (GameUnit unit : parent.archers){
+			this.archers.add(new GameUnit(unit));
+		}
 		this.xExtent = parent.getXExtent();
 		this.yExtent = parent.getYExtent();
 		this.depth = parent.getDepth() + 1;
+		this.validDirections = createValidDirectionsList();
+	}
+	
+	public List<Direction> createValidDirectionsList(){
+		List<Direction> validDirections = new ArrayList<>();
+		for (Direction dir : Direction.values()){
+			if (isValidDirection(dir)){
+				validDirections.add(dir);
+			}
+		}
+		return validDirections;
+	}
+	
+	private boolean isValidDirection(Direction direction){
+		return direction == Direction.NORTH || 
+				direction == Direction.EAST ||
+				direction == Direction.WEST ||
+				direction == Direction.SOUTH;
 	}
 
 	public int getXExtent() {
 		return xExtent;
+	}
+	
+	public List<Direction> getValidDirections(){
+		return this.validDirections;
 	}
 
 	public void setXExtent(int xExtent) {
@@ -175,7 +204,7 @@ public class GameState implements Comparable<GameState>{
 			Action currentAction = actions.get(currentKey);
 			ActionType currentActionType = currentAction.getType();
 			
-			if (currentActionType == ActionType.PRIMITIVEATTACK) {
+			if (currentActionType == ActionType.COMPOUNDATTACK) {
 				TargetedAction currentTargetedAction = (TargetedAction) currentAction; //There might be a better way to do this
 				int unitId = currentTargetedAction.getUnitId();
 				int targetId = currentTargetedAction.getTargetId();
@@ -202,22 +231,22 @@ public class GameState implements Comparable<GameState>{
 					unit.setX(unit.getX() + 1);
 				if (moveDirection == Direction.WEST)
 					unit.setX(unit.getX() - 1);
-				if (moveDirection == Direction.NORTHEAST){
-					unit.setY(unit.getY() + 1);
-					unit.setX(unit.getX() + 1);
-				}
-				if (moveDirection == Direction.SOUTHEAST){
-					unit.setY(unit.getY() - 1);
-					unit.setX(unit.getX() + 1);
-				}
-				if (moveDirection == Direction.NORTHWEST){
-					unit.setY(unit.getY() + 1);
-					unit.setX(unit.getX() - 1);
-				}
-				if (moveDirection == Direction.SOUTHWEST){
-					unit.setY(unit.getY() - 1);
-					unit.setX(unit.getX() - 1);
-				}
+//				if (moveDirection == Direction.NORTHEAST){
+//					unit.setY(unit.getY() + 1);
+//					unit.setX(unit.getX() + 1);
+//				}
+//				if (moveDirection == Direction.SOUTHEAST){
+//					unit.setY(unit.getY() - 1);
+//					unit.setX(unit.getX() + 1);
+//				}
+//				if (moveDirection == Direction.NORTHWEST){
+//					unit.setY(unit.getY() + 1);
+//					unit.setX(unit.getX() - 1);
+//				}
+//				if (moveDirection == Direction.SOUTHWEST){
+//					unit.setY(unit.getY() - 1);
+//					unit.setX(unit.getX() - 1);
+//				}
 			}
 		}
 		
@@ -293,7 +322,7 @@ public class GameState implements Comparable<GameState>{
 	 * @return The weighted linear combination of the features
 	 */
 	public int getUtility() {
-		if (utility == Integer.MIN_VALUE){
+		if (utility == 0){
 			int distanceFromArchers = 0;
 			for (GameUnit footman : footmen) {
 				distanceFromArchers += minDistanceFromArcher(footman);
@@ -435,7 +464,7 @@ public class GameState implements Comparable<GameState>{
 		int playerY = player.getY();
 
 		// Add all possible moves to the action list for this player
-		for (Direction direction : Direction.values()) {
+		for (Direction direction : validDirections) {
 			if (possibleMove(playerX + direction.xComponent(), playerY
 					+ direction.yComponent(), entities)) {
 				actions.add(Action.createPrimitiveMove(player.getID(),
@@ -505,7 +534,8 @@ public class GameState implements Comparable<GameState>{
 			isPossible = false;
 		} else {
 			// check if an entity is already at the desired move location
-			ENTITY_LOOP: for (GameUnit entity : entities) {
+			ENTITY_LOOP: 
+			for (GameUnit entity : entities) {
 				if (entity.getX() == x && entity.getY() == y) {
 					isPossible = false;
 					break ENTITY_LOOP;
