@@ -21,19 +21,19 @@ public class GameUnit {
 		ID = unit.getID();
 	}
 	
-	public int getXPosition() {
+	public int getX() {
 		return x;
 	}
 
-	public void setXPosition(int x) {
+	public void setX(int x) {
 		this.x = x;
 	}
 
-	public int getYPosition() {
+	public int getY() {
 		return y;
 	}
 
-	public void setYPosition(int y) {
+	public void setY(int y) {
 		this.y = y;
 	}
 
