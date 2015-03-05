@@ -1,6 +1,9 @@
 package edu.cwru.sepia.agent.minimax;
 
 
+import java.util.Stack;
+
+import edu.cwru.sepia.agent.minimax.AstarAgent.MapLocation;
 import edu.cwru.sepia.environment.model.state.Unit;
 import edu.cwru.sepia.environment.model.state.UnitTemplate.UnitTemplateView;
 
@@ -9,6 +12,7 @@ public class GameUnit {
 	private int HP;
 	private int damage;
 	private int ID;
+	private Stack<MapLocation> pathToEnemy = new Stack<>();
 	
 	/**
 	 * Creates a GameUnit with the same characteristics as the given Unit.UnitView
@@ -67,5 +71,13 @@ public class GameUnit {
 
 	public int getID() {
 		return ID;
+	}
+	
+	public void setPathToEnemy(Stack<MapLocation> path){
+		this.pathToEnemy = path;
+	}
+	
+	public Stack<MapLocation> getPathToEnemy(){
+		return this.pathToEnemy;
 	}
 }
