@@ -31,8 +31,8 @@ import edu.cwru.sepia.util.DistanceMetrics;
  * delete or change the signatures of the provided methods.
  */
 public class GameState implements Comparable<GameState> {
-	
-	//Constants necessary for weighted utility function
+
+	// Constants necessary for weighted utility function
 	private static final int W_FOOTMAN_HP = 1;
 	private static final int W_FOOTMAN_DISTANCE = -1;
 	private static final int W_ARCHER_HP = -10;
@@ -41,8 +41,8 @@ public class GameState implements Comparable<GameState> {
 	private static final int FOOTMAN_RANGE = 1;
 	private static final int ARCHER_RANGE = 8;
 
-	//Game state variables including units, depth, utility, map
-	//properties and valid directions to move in.
+	// Game state variables including units, depth, utility, map
+	// properties and valid directions to move in.
 	public int xExtent = 0, yExtent = 0;
 	public List<GameUnit> footmen, archers;
 	private int footmanNum = 0;
@@ -74,35 +74,36 @@ public class GameState implements Comparable<GameState> {
 	 * unit deals unitView.getTemplateView().getBaseHealth(): The maximum amount
 	 * of health of this unit
 	 *
-	 * @param state Current state of the episode
-	 * @throws IOException 
+	 * @param state
+	 *            Current state of the episode
+	 * @throws IOException
 	 */
-	public GameState(State.StateView stateView){
-		//Lists of the GameUnits that will be used to track the state
+	public GameState(State.StateView stateView) {
+		// Lists of the GameUnits that will be used to track the state
 
 		footmen = new ArrayList<GameUnit>();
 		archers = new ArrayList<GameUnit>();
-		
-		//Lists of the UnitView from which the GameUnits will be made
+
+		// Lists of the UnitView from which the GameUnits will be made
 		List<Unit.UnitView> footmenUnitView = stateView.getUnits(footmanNum);
 		List<Unit.UnitView> archersUnitView = stateView.getUnits(archerNum);
-		
-		//Create the footman GameUnits
+
+		// Create the footman GameUnits
 		for (Unit.UnitView footman : footmenUnitView) {
 			footmen.add(new GameUnit(footman));
 		}
-		
-		//Create the archer GameUnits
+
+		// Create the archer GameUnits
 		for (Unit.UnitView archer : archersUnitView) {
 			archers.add(new GameUnit(archer));
 		}
-		
-		//Determine map limits and valid move directions
+
+		// Determine map limits and valid move directions
 		xExtent = stateView.getXExtent();
 		yExtent = stateView.getYExtent();
 		this.validDirections = createValidDirectionsList();
 		this.obstacles = new ArrayList<>();
-		for (ResourceView resource : stateView.getAllResourceNodes()){
+		for (ResourceView resource : stateView.getAllResourceNodes()) {
 			obstacles.add(resource);
 		}
 		aStarAgent = new AstarAgent(xExtent, yExtent);
@@ -110,8 +111,11 @@ public class GameState implements Comparable<GameState> {
 
 	/**
 	 * Creates a GameState with the assigned depth value
-	 * @param state The state to created the GameState with
-	 * @param depth The specified depth of the GameState
+	 * 
+	 * @param state
+	 *            The state to created the GameState with
+	 * @param depth
+	 *            The specified depth of the GameState
 	 */
 	public GameState(State.StateView state, int depth) {
 		this(state);
@@ -121,7 +125,8 @@ public class GameState implements Comparable<GameState> {
 	/**
 	 * Constructor used to initialize the A/B search
 	 * 
-	 * @param utility - the initial utility of this game state
+	 * @param utility
+	 *            - the initial utility of this game state
 	 */
 	public GameState(Integer utility) {
 		this.utility = utility;
@@ -131,47 +136,50 @@ public class GameState implements Comparable<GameState> {
 		this.obstacles = new ArrayList<>();
 		aStarAgent = new AstarAgent(xExtent, yExtent);
 	}
-	
+
 	/**
-	 * Creates a child game state from a parent game state, same values but depth is one deeper
-	 * @param parent The parent GameState
+	 * Creates a child game state from a parent game state, same values but
+	 * depth is one deeper
+	 * 
+	 * @param parent
+	 *            The parent GameState
 	 */
-	public GameState(GameState parent){
-		//Initializes all footmen and archers to the same as the parent
+	public GameState(GameState parent) {
+		// Initializes all footmen and archers to the same as the parent
 		this.footmen = new ArrayList<GameUnit>();
 		for (GameUnit unit : parent.footmen) {
 			this.footmen.add(new GameUnit(unit));
 		}
-		
+
 		this.archers = new ArrayList<GameUnit>();
 		for (GameUnit unit : parent.archers) {
 			this.archers.add(new GameUnit(unit));
 		}
-		
+
 		/**
 		 * Sets map dimensions to same as parent, and depth to parent+1
 		 */
 		this.xExtent = parent.getXExtent();
 		this.yExtent = parent.getYExtent();
 		this.depth = parent.getDepth() + 1;
-		
-		//Finds the directions valid to move in
+
+		// Finds the directions valid to move in
 		this.validDirections = createValidDirectionsList();
-		
-		//Finds the obstacles on the map and recognizes them
+
+		// Finds the obstacles on the map and recognizes them
 		this.obstacles = new ArrayList<ResourceView>();
-		for (ResourceView rView : parent.obstacles){
+		for (ResourceView rView : parent.obstacles) {
 			this.obstacles.add(rView);
 		}
 		aStarAgent = new AstarAgent(xExtent, yExtent);
 	}
 
-	
 	/**
 	 * Gets a list of all valid directions for movement in the state
+	 * 
 	 * @return A list of valid movement directions
 	 */
-	public List<Direction> createValidDirectionsList(){
+	public List<Direction> createValidDirectionsList() {
 
 		List<Direction> validDirections = new ArrayList<>();
 		for (Direction dir : Direction.values()) {
@@ -181,10 +189,12 @@ public class GameState implements Comparable<GameState> {
 		}
 		return validDirections;
 	}
-	
+
 	/**
 	 * Checks if directions are valid, only allowed movement are N,E,S,W
-	 * @param direction The direction whose validity is being checked
+	 * 
+	 * @param direction
+	 *            The direction whose validity is being checked
 	 * @return True if the direction is valid, false otherwise
 	 */
 	private boolean isValidDirection(Direction direction) {
@@ -230,6 +240,7 @@ public class GameState implements Comparable<GameState> {
 
 	/**
 	 * Gets the total health of all footmen
+	 * 
 	 * @return int Total health of all footmen
 	 */
 	public int getFootmenHealth() {
@@ -242,6 +253,7 @@ public class GameState implements Comparable<GameState> {
 
 	/**
 	 * Gets the total health of all archers
+	 * 
 	 * @return in Total health of all archers
 	 */
 	public int getArcherHealth() {
@@ -254,6 +266,7 @@ public class GameState implements Comparable<GameState> {
 
 	/**
 	 * Returns a list of all GameUnits in the game, bother archers and footmen
+	 * 
 	 * @return List<GameUnit> All GameUnits in the state
 	 */
 	public List<GameUnit> getEntities() {
@@ -264,6 +277,7 @@ public class GameState implements Comparable<GameState> {
 
 	/**
 	 * Returns whether or not a state is terminal
+	 * 
 	 * @return True if the state is terminal, false otherwise
 	 */
 	public boolean isTerminal() {
@@ -272,7 +286,9 @@ public class GameState implements Comparable<GameState> {
 
 	/**
 	 * Applies actions to the state
-	 * @param actions The actions to be applied
+	 * 
+	 * @param actions
+	 *            The actions to be applied
 	 */
 	public void applyActions(Map<Integer, Action> actions) {
 		Set<Integer> keySet = actions.keySet(); // Gets set of all keys
@@ -284,7 +300,7 @@ public class GameState implements Comparable<GameState> {
 			Action currentAction = actions.get(currentKey);
 			ActionType currentActionType = currentAction.getType();
 
-			//Apply the attack action and deduct health from opponent
+			// Apply the attack action and deduct health from opponent
 			if (currentActionType == ActionType.COMPOUNDATTACK) {
 				TargetedAction currentTargetedAction = (TargetedAction) currentAction;
 				int unitId = currentTargetedAction.getUnitId();
@@ -295,7 +311,7 @@ public class GameState implements Comparable<GameState> {
 
 				target.setHP(target.getHP() - unit.getDamage());
 			} else if (currentActionType == ActionType.PRIMITIVEMOVE) {
-				//Move the current unit in the desired direction
+				// Move the current unit in the desired direction
 				DirectedAction currentDirectedAction = (DirectedAction) currentAction;
 				int unitID = currentDirectedAction.getUnitId();
 				GameUnit unit = getUnit(unitID);
@@ -341,98 +357,111 @@ public class GameState implements Comparable<GameState> {
 	 */
 	public int getUtility() {
 		if (utility == 0) {
-			
-			int distance1FromArchers = minDistanceFromArcher(footmen.get(0), true);
-			int distance2FromArchers = 0;
-			if (footmen.size() >1){
-				distance2FromArchers = minDistanceFromArcher(footmen.get(1), false);	
-			}
-//			for (GameUnit footman : footmen) {
-//				distanceFromArchers += minDistanceFromArcher(footman);
-//			}
 
-			utility =(W_FOOTMAN_HP * getFootmenHealth())
+			int distance1FromArchers = minDistanceFromArcher(footmen.get(0),
+					true);
+			int distance2FromArchers = 0;
+			if (footmen.size() > 1) {
+				distance2FromArchers = minDistanceFromArcher(footmen.get(1),
+						false);
+			}
+			// for (GameUnit footman : footmen) {
+			// distanceFromArchers += minDistanceFromArcher(footman);
+			// }
+
+			utility = (W_FOOTMAN_HP * getFootmenHealth())
 					+ (W_ARCHER_HP * getArcherHealth())
 					+ (W_FOOTMAN_DISTANCE * distance1FromArchers)
 					+ (W_FOOTMAN_DISTANCE * distance2FromArchers)
-					+ (W_FOOTMAN_ALIVE * footmen.size()) + (W_ARCHER_ALIVE * archers
-					.size());
+					+ (W_FOOTMAN_ALIVE * footmen.size())
+					+ (W_ARCHER_ALIVE * archers.size());
 		}
 		return utility;
 	}
 
-//	 public int getUtility(){
-//	 if (utility == 0){
-//		 utility = 0;
-//		 GameUnit a = archers.get(0);
-//		 GameUnit f1 = footmen.get(0);
-//		 GameUnit f2 = footmen.get(1);
-//		 int dx1 = Math.abs(a.getX() - f1.getX());
-//		 int dy1 = Math.abs(a.getY() - f1.getY());
-//		 int dx2 = Math.abs(a.getX() - f2.getX());
-//		 int dy2 = Math.abs(a.getY() - f2.getY());
-//		 utility -= dx1 * 10 + dy1 + dx2 + dy2 * 10;
-//	 }
-//	 return utility;
-//	 }
+	// public int getUtility(){
+	// if (utility == 0){
+	// utility = 0;
+	// GameUnit a = archers.get(0);
+	// GameUnit f1 = footmen.get(0);
+	// GameUnit f2 = footmen.get(1);
+	// int dx1 = Math.abs(a.getX() - f1.getX());
+	// int dy1 = Math.abs(a.getY() - f1.getY());
+	// int dx2 = Math.abs(a.getX() - f2.getX());
+	// int dy2 = Math.abs(a.getY() - f2.getY());
+	// utility -= dx1 * 10 + dy1 + dx2 + dy2 * 10;
+	// }
+	// return utility;
+	// }
 
 	private int minDistanceFromArcher(GameUnit footman, boolean isFirst) {
-		
+
 		int xDiff = 0;
 		int yDiff = 0;
-	    double nextDist = 0;
+		double nextDist = 0;
 		double minDist = Double.MAX_VALUE;
 		GameUnit archer;
-		if (isFirst){
+		if (isFirst) {
 			archer = archers.get(0);
 			xDiff = footman.getX() - archer.getX();
 			yDiff = footman.getY() - archer.getY();
-			//Manhattan Distance implementation
-			//nextDist = Math.abs(xDiff) + Math.abs(yDiff);
-			//Euclidean Distance Implementation
-			//minDist = Math.sqrt(Math.pow(Math.abs(xDiff),2)+Math.pow(Math.abs(yDiff), 2));
-			//A star search method
-			Stack<MapLocation> aStarPath = aStarAgent.findPath(obstacles, footman, archer);
-			if (aStarPath != null){
-				minDist = aStarPath.size();
+			// Manhattan Distance implementation
+			// nextDist = Math.abs(xDiff) + Math.abs(yDiff);
+			// Euclidean Distance Implementation
+
+			if (obstacles.size() > 0) {
+				Stack<MapLocation> aStarPath = aStarAgent.findPath(obstacles,
+						footman, archer);
+				if (aStarPath != null) {
+					minDist = aStarPath.size();
+				} else {
+					minDist = 50;
+				}
 			} else {
-				minDist = 50;
+				minDist = Math.sqrt(Math.pow(Math.abs(xDiff), 2)
+						+ Math.pow(Math.abs(yDiff), 2));
 			}
 		} else {
-			if (archers.size()>1){
+			if (archers.size() > 1) {
 				archer = archers.get(1);
 			} else {
 				archer = archers.get(0);
 			}
 			xDiff = footman.getX() - archer.getX();
 			yDiff = footman.getY() - archer.getY();
-			//Manhattan Distance implementation
-			//nextDist = Math.abs(xDiff) + Math.abs(yDiff);
-			//Euclidean Distance Implementation
-			//minDist = Math.sqrt(Math.pow(Math.abs(xDiff),2)+Math.pow(Math.abs(yDiff), 2));
-			//A star search method
-			Stack<MapLocation> aStarPath = aStarAgent.findPath(obstacles, footman, archer);
-			if (aStarPath != null){
-				minDist = aStarPath.size();
-			} else {
-				minDist = 50;
+
+			// If there are obstacles, use A* distance from enemies
+			if (obstacles.size() > 0) {
+				Stack<MapLocation> aStarPath = aStarAgent.findPath(obstacles,
+						footman, archer);
+				if (aStarPath != null) {
+					minDist = aStarPath.size();
+				} else {
+					minDist = 50;
+				}
+			}
+			// If no obstacles, use the Euclidean distance from enemies
+			else {
+				minDist = Math.sqrt(Math.pow(Math.abs(xDiff), 2)
+						+ Math.pow(Math.abs(yDiff), 2));
 			}
 		}
-//		// Find the closest distance between footman and archers
-//		for (GameUnit archer : archers) {
-//			xDiff = footman.getX() - archer.getX();
-//			yDiff = footman.getY() - archer.getY();
-//			//Manhattan Distance implementation
-//			//nextDist = Math.abs(xDiff) + Math.abs(yDiff);
-//			//Euclidean Distance Implementation
-//			nextDist = Math.sqrt(Math.pow(Math.abs(xDiff),2)+Math.pow(Math.abs(yDiff), 2));
-//			if (nextDist < minDist) {
-//				minDist = nextDist;
-//			}
-//		}
+		// // Find the closest distance between footman and archers
+		// for (GameUnit archer : archers) {
+		// xDiff = footman.getX() - archer.getX();
+		// yDiff = footman.getY() - archer.getY();
+		// //Manhattan Distance implementation
+		// //nextDist = Math.abs(xDiff) + Math.abs(yDiff);
+		// //Euclidean Distance Implementation
+		// nextDist =
+		// Math.sqrt(Math.pow(Math.abs(xDiff),2)+Math.pow(Math.abs(yDiff), 2));
+		// if (nextDist < minDist) {
+		// minDist = nextDist;
+		// }
+		// }
 		// When there are no archers, return 0, else return the min distance to
 		// an archer
-		return archers.isEmpty() ? 0 : (int)minDist;
+		return archers.isEmpty() ? 0 : (int) minDist;
 	}
 
 	/**
@@ -490,7 +519,7 @@ public class GameState implements Comparable<GameState> {
 					actionMap = new HashMap<>();
 					actionMap.put(unitOneID, unitOneAction);
 					actionMap.put(unitTwoID, unitTwoAction);
-					if(!badActions(actionMap, unitOneID, unitTwoID)){
+					if (!badActions(actionMap, unitOneID, unitTwoID)) {
 						// ** Need to apply actions to new state
 						GameState newState = new GameState(this);
 						newState.applyActions(actionMap);
@@ -522,24 +551,25 @@ public class GameState implements Comparable<GameState> {
 		if (unitOneAction.getType() == ActionType.PRIMITIVEMOVE
 				&& unitTwoAction.getType() == ActionType.PRIMITIVEMOVE
 				&& moveToSameLocation(unitOneAction, unitOneID, unitTwoAction,
-						unitTwoID)){
+						unitTwoID)) {
 			return true;
 		}
-		for (ResourceView obstacle : obstacles){
-			
+		for (ResourceView obstacle : obstacles) {
+
 			if (unitOneAction.getType() == ActionType.PRIMITIVEMOVE
-				&& unitTwoAction.getType() == ActionType.PRIMITIVEMOVE){ 
-				if (moveToSameLocation(obstacle, unitOneAction, unitOneID, unitTwoAction,
-							unitTwoID)){
+					&& unitTwoAction.getType() == ActionType.PRIMITIVEMOVE) {
+				if (moveToSameLocation(obstacle, unitOneAction, unitOneID,
+						unitTwoAction, unitTwoID)) {
 					return true;
-				}	
+				}
 			}
 		}
 		return false;
 	}
-	
-	public boolean moveToSameLocation(ResourceView obstacle, Action moveActionOne, int unitIDOne,
-			Action moveActionTwo, int unitIDTwo) {
+
+	public boolean moveToSameLocation(ResourceView obstacle,
+			Action moveActionOne, int unitIDOne, Action moveActionTwo,
+			int unitIDTwo) {
 		DirectedAction dActionOne = (DirectedAction) moveActionOne;
 		DirectedAction dActionTwo = (DirectedAction) moveActionTwo;
 
@@ -551,7 +581,7 @@ public class GameState implements Comparable<GameState> {
 		int yTwo = unitTwo.getY() + dActionTwo.getDirection().yComponent();
 		int xOb = obstacle.getXPosition();
 		int yOb = obstacle.getYPosition();
-		if ((xOne == xOb && yOne == yOb) || (xTwo == xOb && yTwo == yOb)){
+		if ((xOne == xOb && yOne == yOb) || (xTwo == xOb && yTwo == yOb)) {
 			return true;
 		}
 		return false;
@@ -560,34 +590,30 @@ public class GameState implements Comparable<GameState> {
 	private List<Action> getActions(GameUnit player, List<GameUnit> enemies) {
 		List<GameUnit> entities = getEntities();
 		List<Action> actions = new ArrayList<>();
-
 		int playerX = player.getX();
 		int playerY = player.getY();
-
-		Stack<MapLocation> aStarPath = aStarAgent.findPath(obstacles, player, getClosestEnemy(player, enemies));
-		//*****NEED TO CHECK IF PATH IS EMPTY!
-//<<<<<<< HEAD
-//		if (aStarPath != null && !aStarPath.isEmpty()){
-//		MapLocation nextLoc = aStarPath.pop();
-//		actions.add(Action.createPrimitiveMove(player.getID(), getMoveDirection(player, nextLoc)));
-//		} else {
-//		
-//=======
-		if (aStarPath.size() > 0) {
-			MapLocation nextLoc = aStarPath.pop();
-			actions.add(Action.createPrimitiveMove(player.getID(), getMoveDirection(player, nextLoc)));
-		}
-		/*
-		// Add all possible moves to the action list for this player
-		for (Direction direction : validDirections) {
-			if (possibleMove(playerX + direction.xComponent(), playerY
-					+ direction.yComponent(), entities)) {
+		// Uses A* search to determine moves if there are obstacles on the map
+		if (obstacles.size() > 0) {
+			Stack<MapLocation> aStarPath = aStarAgent.findPath(obstacles,
+					player, getClosestEnemy(player, enemies));
+			if (aStarPath.size() > 0) {
+				MapLocation nextLoc = aStarPath.pop();
 				actions.add(Action.createPrimitiveMove(player.getID(),
-						direction));
+						getMoveDirection(player, nextLoc)));
 			}
 		}
-		} */
-		
+		// Otherwise just uses all valid moves since we can take straight path
+		// to enemies
+		else {
+			// Add all possible moves to the action list for this player
+			for (Direction direction : validDirections) {
+				if (possibleMove(playerX + direction.xComponent(), playerY
+						+ direction.yComponent(), entities)) {
+					actions.add(Action.createPrimitiveMove(player.getID(),
+							direction));
+				}
+			}
+		}
 		// Add all possible attacks to the action list for this player
 		for (GameUnit enemy : enemiesInRange(player)) {
 			actions.add(Action.createCompoundAttack(player.getID(),
@@ -595,29 +621,30 @@ public class GameState implements Comparable<GameState> {
 		}
 		return actions;
 	}
-	
+
 	private Direction getMoveDirection(GameUnit player, MapLocation nextLoc) {
 		int playerX = player.getX();
 		int playerY = player.getY();
 		int nextLocX = nextLoc.x;
 		int nextLocY = nextLoc.y;
-		
-		if (nextLocX == playerX) { //If this is true we are moving either north or south
+
+		if (nextLocX == playerX) { // If this is true we are moving either north
+									// or south
 			if (playerY - nextLocY == 1)
 				return Direction.NORTH;
 			else if (playerY - nextLocY == -1)
 				return Direction.SOUTH;
-		}
-		else if (nextLocY == playerY) { //If this is true we are moving either east or west
+		} else if (nextLocY == playerY) { // If this is true we are moving
+											// either east or west
 			if (playerX - nextLocX == -1)
 				return Direction.EAST;
 			else if (playerX - nextLocX == 1)
 				return Direction.WEST;
 		}
-		
+
 		return null;
 	}
-	
+
 	private GameUnit getClosestEnemy(GameUnit player, List<GameUnit> enemies) {
 		int minDist = Integer.MAX_VALUE;
 		int nextDist = 0;
@@ -628,32 +655,35 @@ public class GameState implements Comparable<GameState> {
 			archer = enemy;
 			int xDiff = player.getX() - archer.getX();
 			int yDiff = player.getY() - archer.getY();
-			//Manhattan Distance implementation
+			// Manhattan Distance implementation
 			nextDist = Math.abs(xDiff) + Math.abs(yDiff);
-			if (nextDist < minDist){
+			if (nextDist < minDist) {
 				minDist = nextDist;
 				closestEnemy = enemy;
 			}
-			//Euclidean Distance Implementation
-			//minDist = Math.sqrt(Math.pow(Math.abs(xDiff),2)+Math.pow(Math.abs(yDiff), 2));
-			//A star search method
-//			aStarPath = aStarAgent.findPath(obstacles, footman, archer);
-//			if (aStarPath != null){
-//				minDist = aStarPath.size();
-//			} else {
-//				minDist = 50;
-//			}
-		//for (GameUnit enemy : enemies) {
-//			aStarPath = aStarAgent.findPath(obstacles, player, enemy);
-//			if (aStarPath.size() < minDist) {
-//				minDist = aStarPath.size();
-//				closestEnemy = enemy;
-//			}
-			
+			// Euclidean Distance Implementation
+			// minDist =
+			// Math.sqrt(Math.pow(Math.abs(xDiff),2)+Math.pow(Math.abs(yDiff),
+			// 2));
+			// A star search method
+			// aStarPath = aStarAgent.findPath(obstacles, footman, archer);
+			// if (aStarPath != null){
+			// minDist = aStarPath.size();
+			// } else {
+			// minDist = 50;
+			// }
+			// for (GameUnit enemy : enemies) {
+			// aStarPath = aStarAgent.findPath(obstacles, player, enemy);
+			// if (aStarPath.size() < minDist) {
+			// minDist = aStarPath.size();
+			// closestEnemy = enemy;
+			// }
+
 		}
-		
+
 		return closestEnemy;
 	}
+
 	/**
 	 * Determines if both unit 1 and unit 2 are moving to the same location.
 	 * These units are determined based on whether this game state is a max
@@ -768,11 +798,5 @@ public class GameState implements Comparable<GameState> {
 		}
 		return hashcode;
 	}
-	
-
-
-
-
-
 
 }
