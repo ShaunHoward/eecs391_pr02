@@ -30,14 +30,14 @@ public class GameState implements Comparable<GameState> {
 	private static final int W_FOOTMAN_ALIVE = 10;
 	private static final int W_ARCHER_ALIVE = -100;
 	private static final int FOOTMAN_RANGE = 1;
-	private static final int ARCHER_RANGE = 15;
+	private static final int ARCHER_RANGE = 12;
 
 	public int xExtent = 0, yExtent = 0;
 	public List<GameUnit> footmen, archers;
 	private int footmanNum = 0;
 	private int archerNum = 1;
 	private int depth = 0;
-	private int utility = 0;
+	private int utility;
 	private boolean isMax = true;
 	private List<Direction> validDirections;
 	private List<ResourceView> obstacles;
@@ -216,15 +216,7 @@ public class GameState implements Comparable<GameState> {
 			ActionType currentActionType = currentAction.getType();
 
 			if (currentActionType == ActionType.COMPOUNDATTACK) {
-				TargetedAction currentTargetedAction = (TargetedAction) currentAction; // There
-																						// might
-																						// be
-																						// a
-																						// better
-																						// way
-																						// to
-																						// do
-																						// this
+				TargetedAction currentTargetedAction = (TargetedAction) currentAction;
 				int unitId = currentTargetedAction.getUnitId();
 				int targetId = currentTargetedAction.getTargetId();
 
@@ -238,7 +230,7 @@ public class GameState implements Comparable<GameState> {
 				GameUnit unit = getUnit(unitID);
 				Direction moveDirection = currentDirectedAction.getDirection();
 
-				unit.setY(unit.getX() + moveDirection.xComponent());
+				unit.setX(unit.getX() + moveDirection.xComponent());
 				unit.setY(unit.getY() + moveDirection.yComponent());
 			}
 		}
@@ -304,10 +296,8 @@ public class GameState implements Comparable<GameState> {
 	public int getUtility() {
 		if (utility == 0) {
 			int distanceFromArchers = 0;
-			if (isMax){
-				for (GameUnit footman : footmen) {
-					distanceFromArchers += minDistanceFromArcher(footman);
-				}
+			for (GameUnit footman : footmen) {
+				distanceFromArchers += minDistanceFromArcher(footman);
 			}
 
 			utility = ((W_FOOTMAN_HP * getFootmenHealth())
@@ -319,28 +309,32 @@ public class GameState implements Comparable<GameState> {
 		return utility;
 	}
 
-	// public int getUtility(){
-	// if (weight == Integer.MIN_VALUE){
-	// weight = 0;
-	// GameUnit a = archers.get(0);
-	// GameUnit f1 = footmen.get(0);
-	// GameUnit f2 = footmen.get(1);
-	// int dx1 = Math.abs(a.getX() - f1.getX());
-	// int dy1 = Math.abs(a.getY() - f1.getY());
-	// int dx2 = Math.abs(a.getX() - f2.getX());
-	// int dy2 = Math.abs(a.getY() - f2.getY());
-	// weight -= dx1 * 10 + dy1 + dx2 + dy2 * 10;
-	// }
-	// return weight;
-	// }
+//	 public int getUtility(){
+//	 if (utility == 0){
+//		 utility = 0;
+//		 GameUnit a = archers.get(0);
+//		 GameUnit f1 = footmen.get(0);
+//		 GameUnit f2 = footmen.get(1);
+//		 int dx1 = Math.abs(a.getX() - f1.getX());
+//		 int dy1 = Math.abs(a.getY() - f1.getY());
+//		 int dx2 = Math.abs(a.getX() - f2.getX());
+//		 int dy2 = Math.abs(a.getY() - f2.getY());
+//		 utility -= dx1 * 10 + dy1 + dx2 + dy2 * 10;
+//	 }
+//	 return utility;
+//	 }
 
 	private int minDistanceFromArcher(GameUnit footman) {
-		int minDist = Integer.MAX_VALUE;
+		
+		int xDiff = 0;
+		int yDiff = 0;
 		int nextDist = 0;
+		int minDist = Integer.MAX_VALUE;
 		// Find the closest distance between footman and archers
 		for (GameUnit archer : archers) {
-			nextDist = Math.min(Math.abs(footman.getX() - archer.getX()),
-					Math.abs(footman.getY() - archer.getY()));
+			xDiff = footman.getX() - archer.getX();
+			yDiff = footman.getY() - archer.getY();
+			nextDist = Math.abs(xDiff) + Math.abs(yDiff);
 			if (nextDist < minDist) {
 				minDist = nextDist;
 			}
