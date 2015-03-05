@@ -213,44 +213,16 @@ public class GameState implements Comparable<GameState>{
 				GameUnit target = getUnit(targetId);
 				
 				target.setHP(target.getHP() - unit.getDamage());
-			}
-			
-			else if (currentActionType == ActionType.PRIMITIVEMOVE) {
+			} else if (currentActionType == ActionType.PRIMITIVEMOVE) {
 				DirectedAction currentDirectedAction = (DirectedAction) currentAction;
 				int unitID = currentDirectedAction.getUnitId();
 				GameUnit unit = getUnit(unitID);
 				Direction moveDirection = currentDirectedAction.getDirection();
 				
-				//Specifically says in the JavaDoc not to move units in this way
-				//but since we're not actually returning this in the middlestep I don't see any other way to do it currently.
-				if (moveDirection == Direction.NORTH)
-					unit.setY(unit.getY() + 1);
-				if (moveDirection == Direction.SOUTH)
-					unit.setY(unit.getY() - 1);
-				if (moveDirection == Direction.EAST)
-					unit.setX(unit.getX() + 1);
-				if (moveDirection == Direction.WEST)
-					unit.setX(unit.getX() - 1);
-//				if (moveDirection == Direction.NORTHEAST){
-//					unit.setY(unit.getY() + 1);
-//					unit.setX(unit.getX() + 1);
-//				}
-//				if (moveDirection == Direction.SOUTHEAST){
-//					unit.setY(unit.getY() - 1);
-//					unit.setX(unit.getX() + 1);
-//				}
-//				if (moveDirection == Direction.NORTHWEST){
-//					unit.setY(unit.getY() + 1);
-//					unit.setX(unit.getX() - 1);
-//				}
-//				if (moveDirection == Direction.SOUTHWEST){
-//					unit.setY(unit.getY() - 1);
-//					unit.setX(unit.getX() - 1);
-//				}
+				unit.setY(unit.getX() + moveDirection.xComponent());
+				unit.setY(unit.getY() + moveDirection.yComponent());
 			}
 		}
-		
-		//refreshViews();
 	}
 	
 	private GameUnit getUnit(int ID) {
