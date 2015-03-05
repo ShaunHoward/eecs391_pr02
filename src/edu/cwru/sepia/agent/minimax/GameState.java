@@ -250,13 +250,7 @@ public class GameState implements Comparable<GameState> {
 
 	/**
 	 * Applies actions to the state
-<<<<<<< HEAD
 	 * @param actions The actions to be applied
-=======
-	 * 
-	 * @param actions
-	 *            The actions to be applied
->>>>>>> 3f6fa9ca749f7ad8192a5fa31fa2cd22a1fad433
 	 */
 	public void applyActions(Map<Integer, Action> actions) {
 		Set<Integer> keySet = actions.keySet(); // Gets set of all keys
