@@ -400,9 +400,10 @@ public class GameState implements Comparable<GameState> {
 	 * @return All possible actions and their associated resulting game state
 	 */
 	public List<GameStateChild> getChildren() {
-
+		//Lists of actions that are available to each unit
 		List<Action> unitOneActions = new ArrayList<>();
 		List<Action> unitTwoActions = new ArrayList<>();
+		
 		List<Map<Integer, Action>> action = new ArrayList<>();
 		int unitOneID = 0;
 		int unitTwoID = 0;
@@ -416,7 +417,8 @@ public class GameState implements Comparable<GameState> {
 				unitTwoActions = getActions(footmen.get(1), archers);
 				twoUnits = true;
 			}
-		} else {
+		}
+		else {
 			unitOneID = archers.get(0).getID();
 			unitOneActions = getActions(archers.get(0), footmen);
 			if (archers.size() > 1) {
