@@ -406,16 +406,20 @@ public class GameState implements Comparable<GameState> {
 			}
 			xDiff = footman.getX() - archer.getX();
 			yDiff = footman.getY() - archer.getY();
-			//Manhattan Distance implementation
-			//nextDist = Math.abs(xDiff) + Math.abs(yDiff);
-			//Euclidean Distance Implementation
-			//minDist = Math.sqrt(Math.pow(Math.abs(xDiff),2)+Math.pow(Math.abs(yDiff), 2));
-			//A star search method
-			Stack<MapLocation> aStarPath = aStarAgent.findPath(obstacles, footman, archer);
-			if (aStarPath != null){
-				minDist = aStarPath.size();
-			} else {
+			
+			//If there are obstacles, use A* distance from enemies
+			if (obstacles.size() > 0) {
+				Stack<MapLocation> aStarPath = aStarAgent.findPath(obstacles, footman, archer);
+				if (aStarPath != null){
+					minDist = aStarPath.size();
+				} 
+				else {
 				minDist = 50;
+				}
+			}
+			//If no obstacles, use the Euclidean distance from enemies
+			else {
+				minDist = Math.sqrt(Math.pow(Math.abs(xDiff),2)+Math.pow(Math.abs(yDiff), 2));
 			}
 		}
 //		// Find the closest distance between footman and archers
@@ -564,23 +568,23 @@ public class GameState implements Comparable<GameState> {
 		int playerX = player.getX();
 		int playerY = player.getY();
 
-		Stack<MapLocation> aStarPath = aStarAgent.findPath(obstacles, player, getClosestEnemy(player, enemies));
-		//*****NEED TO CHECK IF PATH IS EMPTY!
-		if (aStarPath.size() > 0) {
-			MapLocation nextLoc = aStarPath.pop();
-			actions.add(Action.createPrimitiveMove(player.getID(), getMoveDirection(player, nextLoc)));
-		}
-		/*
-		// Add all possible moves to the action list for this player
-		for (Direction direction : validDirections) {
-			if (possibleMove(playerX + direction.xComponent(), playerY
-					+ direction.yComponent(), entities)) {
-				actions.add(Action.createPrimitiveMove(player.getID(),
-						direction));
+		//Uses A* search to determine moves if there are obstacles on the map
+		if (obstacles.size() > 0 ) {
+			Stack<MapLocation> aStarPath = aStarAgent.findPath(obstacles, player, getClosestEnemy(player, enemies));
+			if (aStarPath.size() > 0) {
+				MapLocation nextLoc = aStarPath.pop();
+				actions.add(Action.createPrimitiveMove(player.getID(), getMoveDirection(player, nextLoc)));
 			}
 		}
-		*/
-		
+		//Otherwise just uses all valid moves since we can take straight path to enemies
+		else {
+			// Add all possible moves to the action list for this player
+			for (Direction direction : validDirections) {
+				if (possibleMove(playerX + direction.xComponent(), playerY + direction.yComponent(), entities)) {
+					actions.add(Action.createPrimitiveMove(player.getID(),direction));
+				}
+			}
+		}
 		// Add all possible attacks to the action list for this player
 		for (GameUnit enemy : enemiesInRange(player)) {
 			actions.add(Action.createCompoundAttack(player.getID(),
