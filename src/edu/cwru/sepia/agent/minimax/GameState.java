@@ -3,11 +3,9 @@ package edu.cwru.sepia.agent.minimax;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.Stack;
 
@@ -20,7 +18,6 @@ import edu.cwru.sepia.environment.model.state.ResourceNode.ResourceView;
 import edu.cwru.sepia.environment.model.state.State;
 import edu.cwru.sepia.environment.model.state.Unit;
 import edu.cwru.sepia.util.Direction;
-import edu.cwru.sepia.util.DistanceMetrics;
 
 /**
  * This class stores all of the information the agent needs to know about the
@@ -79,7 +76,6 @@ public class GameState implements Comparable<GameState> {
 	 */
 	public GameState(State.StateView stateView){
 		//Lists of the GameUnits that will be used to track the state
-
 		footmen = new ArrayList<GameUnit>();
 		archers = new ArrayList<GameUnit>();
 		
@@ -119,8 +115,7 @@ public class GameState implements Comparable<GameState> {
 	}
 
 	/**
-	 * Constructor used to initialize the A/B search
-	 * 
+	 * Constructor used to initialize the A/B search 
 	 * @param utility - the initial utility of this game state
 	 */
 	public GameState(Integer utility) {
@@ -230,7 +225,7 @@ public class GameState implements Comparable<GameState> {
 
 	/**
 	 * Gets the total health of all footmen
-	 * @return int Total health of all footmen
+	 * @return Total health of all footmen
 	 */
 	public int getFootmenHealth() {
 		int totalHealth = 0;
@@ -275,9 +270,7 @@ public class GameState implements Comparable<GameState> {
 	 * @param actions The actions to be applied
 	 */
 	public void applyActions(Map<Integer, Action> actions) {
-		Set<Integer> keySet = actions.keySet(); // Gets set of all keys
-												// contained in the map
-		Iterator<Integer> keySetItr = keySet.iterator();
+		Iterator<Integer> keySetItr = actions.keySet().iterator();
 
 		while (keySetItr.hasNext()) {
 			Integer currentKey = keySetItr.next();
@@ -294,8 +287,9 @@ public class GameState implements Comparable<GameState> {
 				GameUnit target = getUnit(targetId);
 
 				target.setHP(target.getHP() - unit.getDamage());
-			} else if (currentActionType == ActionType.PRIMITIVEMOVE) {
-				//Move the current unit in the desired direction
+			}
+			//Move the current unit in the desired direction
+			else if (currentActionType == ActionType.PRIMITIVEMOVE) {
 				DirectedAction currentDirectedAction = (DirectedAction) currentAction;
 				int unitID = currentDirectedAction.getUnitId();
 				GameUnit unit = getUnit(unitID);
@@ -307,6 +301,11 @@ public class GameState implements Comparable<GameState> {
 		}
 	}
 
+	/**
+	 * Finds the GameUnit with the matching ID
+	 * @param ID The ID to be searched for
+	 * @return The GameUnit with the matching ID, null if no GameUnit has that ID
+	 */
 	private GameUnit getUnit(int ID) {
 		List<GameUnit> entities = this.getEntities();
 
@@ -341,16 +340,13 @@ public class GameState implements Comparable<GameState> {
 	 */
 	public int getUtility() {
 		if (utility == 0) {
-			
 			int distance1FromArchers = minDistanceFromArcher(footmen.get(0), true);
 			int distance2FromArchers = 0;
 			if (footmen.size() >1){
 				distance2FromArchers = minDistanceFromArcher(footmen.get(1), false);	
 			}
-//			for (GameUnit footman : footmen) {
-//				distanceFromArchers += minDistanceFromArcher(footman);
-//			}
 
+			//Utility function weighs the footmen's health, archers, health, distance between the footmen and archers, and the number of GameUnits alive
 			utility =(W_FOOTMAN_HP * getFootmenHealth())
 					+ (W_ARCHER_HP * getArcherHealth())
 					+ (W_FOOTMAN_DISTANCE * distance1FromArchers)
@@ -361,87 +357,29 @@ public class GameState implements Comparable<GameState> {
 		return utility;
 	}
 
-//	 public int getUtility(){
-//	 if (utility == 0){
-//		 utility = 0;
-//		 GameUnit a = archers.get(0);
-//		 GameUnit f1 = footmen.get(0);
-//		 GameUnit f2 = footmen.get(1);
-//		 int dx1 = Math.abs(a.getX() - f1.getX());
-//		 int dy1 = Math.abs(a.getY() - f1.getY());
-//		 int dx2 = Math.abs(a.getX() - f2.getX());
-//		 int dy2 = Math.abs(a.getY() - f2.getY());
-//		 utility -= dx1 * 10 + dy1 + dx2 + dy2 * 10;
-//	 }
-//	 return utility;
-//	 }
-
-	private int minDistanceFromArcher(GameUnit footman, boolean isFirst) {
-		
+	private int minDistanceFromArcher(GameUnit footman, boolean isFirst) {	
 		int xDiff = 0;
 		int yDiff = 0;
-	    double nextDist = 0;
 		double minDist = Double.MAX_VALUE;
-		GameUnit archer;
-		if (isFirst){
-			archer = archers.get(0);
-			xDiff = footman.getX() - archer.getX();
-			yDiff = footman.getY() - archer.getY();
-			//Manhattan Distance implementation
-			//nextDist = Math.abs(xDiff) + Math.abs(yDiff);
-			//Euclidean Distance Implementation
-			
-			if (obstacles.size() > 0) {
-				Stack<MapLocation> aStarPath = aStarAgent.findPath(obstacles, footman, archer);
-				if (aStarPath != null){
-					minDist = aStarPath.size();
-				} 
-				else {
-					minDist = 50;
-				}
-			}
+		GameUnit archer = getClosestEnemy(footman, archers);
+		
+		xDiff = footman.getX() - archer.getX();
+		yDiff = footman.getY() - archer.getY();
+	
+		if (obstacles.size() > 0) {
+			Stack<MapLocation> aStarPath = aStarAgent.findPath(obstacles, footman, archer);
+			if (aStarPath != null){
+				minDist = aStarPath.size();
+			} 
 			else {
-				minDist = Math.sqrt(Math.pow(Math.abs(xDiff),2)+Math.pow(Math.abs(yDiff), 2));
-			}
-		} else {
-			if (archers.size()>1){
-				archer = archers.get(1);
-			} else {
-				archer = archers.get(0);
-			}
-			xDiff = footman.getX() - archer.getX();
-			yDiff = footman.getY() - archer.getY();
-			
-			//If there are obstacles, use A* distance from enemies
-			if (obstacles.size() > 0) {
-				Stack<MapLocation> aStarPath = aStarAgent.findPath(obstacles, footman, archer);
-				if (aStarPath != null){
-					minDist = aStarPath.size();
-				} 
-				else {
 				minDist = 50;
-				}
-			}
-			//If no obstacles, use the Euclidean distance from enemies
-			else {
-				minDist = Math.sqrt(Math.pow(Math.abs(xDiff),2)+Math.pow(Math.abs(yDiff), 2));
 			}
 		}
-//		// Find the closest distance between footman and archers
-//		for (GameUnit archer : archers) {
-//			xDiff = footman.getX() - archer.getX();
-//			yDiff = footman.getY() - archer.getY();
-//			//Manhattan Distance implementation
-//			//nextDist = Math.abs(xDiff) + Math.abs(yDiff);
-//			//Euclidean Distance Implementation
-//			nextDist = Math.sqrt(Math.pow(Math.abs(xDiff),2)+Math.pow(Math.abs(yDiff), 2));
-//			if (nextDist < minDist) {
-//				minDist = nextDist;
-//			}
-//		}
-		// When there are no archers, return 0, else return the min distance to
-		// an archer
-		return archers.isEmpty() ? 0 : (int)minDist;
+		else {
+			minDist = Math.sqrt(Math.pow(Math.abs(xDiff),2)+Math.pow(Math.abs(yDiff), 2));
+		}
+		
+		return archers.isEmpty() ? 0 : (int) minDist;
 	}
 
 	/**

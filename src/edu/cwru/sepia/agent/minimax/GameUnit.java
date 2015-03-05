@@ -2,12 +2,12 @@ package edu.cwru.sepia.agent.minimax;
 
 
 import java.util.Stack;
-
 import edu.cwru.sepia.agent.minimax.AstarAgent.MapLocation;
 import edu.cwru.sepia.environment.model.state.Unit;
 import edu.cwru.sepia.environment.model.state.UnitTemplate.UnitTemplateView;
 
 public class GameUnit {
+	//GameUnit variables: position, health, damage, ID, pathToEnemy
 	private int x, y;
 	private int HP;
 	private int damage;
