@@ -360,17 +360,20 @@ public class GameState implements Comparable<GameState> {
 //	 return utility;
 //	 }
 
-	private int minDistanceFromArcher(GameUnit footman) {
+	private double minDistanceFromArcher(GameUnit footman) {
 		
 		int xDiff = 0;
 		int yDiff = 0;
-		int nextDist = 0;
-		int minDist = Integer.MAX_VALUE;
+		double nextDist = 0;
+		double minDist = Double.MAX_VALUE;
 		// Find the closest distance between footman and archers
 		for (GameUnit archer : archers) {
 			xDiff = footman.getX() - archer.getX();
 			yDiff = footman.getY() - archer.getY();
-			nextDist = Math.abs(xDiff) + Math.abs(yDiff);
+			//Manhattan Distance implementation
+			//nextDist = Math.abs(xDiff) + Math.abs(yDiff);
+			//Euclidean Distance Implementation
+			nextDist = Math.sqrt(Math.pow(Math.abs(xDiff),2)+Math.pow(Math.abs(yDiff), 2));
 			if (nextDist < minDist) {
 				minDist = nextDist;
 			}
