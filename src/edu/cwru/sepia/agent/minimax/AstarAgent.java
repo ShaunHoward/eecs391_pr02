@@ -11,8 +11,15 @@ import edu.cwru.sepia.environment.model.state.ResourceNode.ResourceView;
 import edu.cwru.sepia.util.DistanceMetrics;
 
 public class AstarAgent {
-	
+	//The x and y extent of the current map
 	private int xExtent, yExtent;
+	
+	/**
+	 * A basic constructor for the astar agent.
+	 * 
+	 * @param xExtent - the x extent of the current map
+	 * @param yExtent - the y extent of the current map
+	 */
 	public AstarAgent(int xExtent, int yExtent){
 		this.xExtent = xExtent;
 		this.yExtent = yExtent;
@@ -239,77 +246,17 @@ public class AstarAgent {
         public Set<MapLocation> getNeighbors(AgentMap map) {
             Set<MapLocation> neighbors = new HashSet<>();
 
-            //Add neighbors of 8 directions to set of neighbors
+            //Add neighbors of 4 directions to set of neighbors
             neighbors.add(getNorthNeighbor(map));
             neighbors.add(getSouthNeighbor(map));
             neighbors.add(getEastNeighbor(map));
             neighbors.add(getWestNeighbor(map));
-            //neighbors.add(getNorthEastNeighbor(map));
-            //neighbors.add(getNorthWestNeighbor(map));
-            //neighbors.add(getSouthEastNeighbor(map));
-            //neighbors.add(getSouthWestNeighbor(map));
 
             //Remove null if any neighbors were not found
             if (neighbors.contains(null)) {
                 neighbors.remove(null);
             }
             return neighbors;
-        }
-
-        /**
-         * Returns the map location southwest of this map location
-         * or null if the location is off of the map.
-         *
-         * @param map - the map to find the southwest neighbor in
-         * @return the southwest neighbor of this location
-         */
-        private MapLocation getSouthWestNeighbor(AgentMap map) {
-            //x - 1 & y + 1
-            int neighborX = this.x - 1;
-            int neighborY = this.y + 1;
-            return neighborWithinBounds(map, neighborX, neighborY);
-        }
-
-        /**
-         * Returns the map location southeast of this map location
-         * or null if the location is off of the map.
-         *
-         * @param map - the map to find the southeast neighbor in
-         * @return the southeast neighbor of this location
-         */
-        private MapLocation getSouthEastNeighbor(AgentMap map) {
-            //x + 1 & y + 1
-            int neighborX = this.x + 1;
-            int neighborY = this.y + 1;
-            return neighborWithinBounds(map, neighborX, neighborY);
-        }
-
-        /**
-         * Returns the map location northwest of this map location
-         * or null if the location is off of the map.
-         *
-         * @param map - the map to find the northwest neighbor in
-         * @return the northwest neighbor of this location
-         */
-        private MapLocation getNorthWestNeighbor(AgentMap map) {
-            //x - 1 & y - 1
-            int neighborX = this.x - 1;
-            int neighborY = this.y - 1;
-            return neighborWithinBounds(map, neighborX, neighborY);
-        }
-
-        /**
-         * Returns the map location northeast of this map location
-         * or null if the location is off of the map.
-         *
-         * @param map - the map to find the northeast neighbor in
-         * @return the northeast neighbor of this location
-         */
-        private MapLocation getNorthEastNeighbor(AgentMap map) {
-            //x + 1 & y - 1
-            int neighborX = this.x + 1;
-            int neighborY = this.y - 1;
-            return neighborWithinBounds(map, neighborX, neighborY);
         }
 
         /**
@@ -362,29 +309,6 @@ public class AstarAgent {
             //x & y - 1
             int neighborY = this.y - 1;
             return neighborWithinBound(map, this.x, neighborY, false);
-        }
-
-        /**
-         * Determines if the provided coordinates are within the x and y bounds of the map.
-         * When the given coordinates are within the agent map, a new neighbor map location
-         * will be generated from the provided coordinates. Otherwise, null is returned because
-         * the neighbor is not within the bounds of the map.
-         *
-         * @param map       - the map to check the bounds of
-         * @param neighborX - the x coordinate of the new neighbor
-         * @param neighborY - the y coordinate of the new neighbor
-         * @return a new neighbor within the bounds of the map or null if the coordinates are out
-         * of the map bounds
-         */
-        private MapLocation neighborWithinBounds(AgentMap map, int neighborX, int neighborY) {
-            //Check if the neighbor is within the x extent of the map.
-            if (map.getXExtent() > neighborX && neighborX >= 0) {
-                //Check if the neighbor is within the y extent of the map
-                if (map.getYExtent() > neighborY && neighborY >= 0) {
-                    return new MapLocation(neighborX, neighborY, this, 0);
-                }
-            }
-            return null;
         }
 
         /**
@@ -501,9 +425,6 @@ public class AstarAgent {
 
     }
     
-    
-
-    
     /**
      * Finds an A* path from the footman start position to the town hall position if one exists.
      * If a path does not exist, null will be returned. The enemy footman location and resource locations
@@ -524,26 +445,26 @@ public class AstarAgent {
             resourceLocations.add(new MapLocation(resource.getXPosition(), resource.getYPosition(), null, 0));
         }
 
-        return AstarSearch(startLoc, goalLoc, xExtent, yExtent, null, resourceLocations);
+        return AstarSearch(startLoc, goalLoc, xExtent, yExtent, resourceLocations);
     }
 
     /**
      * Finds the A* path through a map via the given map locations. The algorithm will avoid designing a path through
-     * the enemy and resource locations but will find an optimal path to a location adjacent to the townhall location (goal)
+     * the resource locations but will find an optimal path to a location adjacent to the goal location
      * from the footman starting location.
      * <p/>
      * It returns a Stack of locations with the top of the stack being the first space to move to
-     * and the bottom of the stack being the last space to move to. If there is no path to the townhall
-     * then null is returned from the method and the agent will print a message via middlestep() and exit with exit code 0.
+     * and the bottom of the stack being the last space to move to. If there is no path to the goal
+     * then null is returned from the method and the agent will print a message.
      * <p/>
      * An example map is the following:
      * <p/>
      * F - - - -
      * x x x - x
-     * H - - - -
+     * G - - - -
      * <p/>
      * F is the footman
-     * H is the townhall
+     * G is the goal
      * x's are occupied spaces
      * <p/>
      * xExtent would be 5 for this map with valid X coordinates in the range of [0, 4]
@@ -562,16 +483,16 @@ public class AstarAgent {
      * (2,2)
      * (1,2)
      * <p/>
-     * Notice how the initial footman position and the townhall position are not included in the path stack
+     * Notice how the initial footman position and the goal position are not included in the path stack
      *
      * @param start             - Starting position of the footman
-     * @param goal              - MapLocation of the townhall
+     * @param goal              - MapLocation of the goal
      * @param xExtent           - Width of the map
      * @param yExtent           - Length of the map
      * @param resourceLocations - Set of positions occupied by resources
      * @return Stack of positions with top of stack being first move in plan
      */
-    private Stack<MapLocation> AstarSearch(MapLocation start, MapLocation goal, int xExtent, int yExtent, MapLocation enemyFootmanLoc, Set<MapLocation> resourceLocations) {
+    private Stack<MapLocation> AstarSearch(MapLocation start, MapLocation goal, int xExtent, int yExtent, Set<MapLocation> resourceLocations) {
         /* The agent map for this A* agent. It is used for each A* search. */
         AgentMap agentMap;
         
@@ -583,7 +504,6 @@ public class AstarAgent {
 
         //initialization of agent's current map
         agentMap = new AgentMap(xExtent, yExtent, start, goal, resourceLocations);
-        agentMap.setEnemyLocation(enemyFootmanLoc);
         agentMap.setEnd(goal);
         initializeSearch(agentMap, openLocations);
 
@@ -635,7 +555,6 @@ public class AstarAgent {
     private float distanceBetweenLocations(MapLocation beginning, MapLocation end) {
         if (beginning != null && end != null) {
             return DistanceMetrics.chebyshevDistance(beginning.x, beginning.y, end.x, end.y);
-        	//return (float) Math.sqrt(Math.pow(Math.abs(beginning.x - end.x),2)+Math.pow(Math.abs(beginning.y - end.y), 2));
         }
         return Float.MAX_VALUE;
     }

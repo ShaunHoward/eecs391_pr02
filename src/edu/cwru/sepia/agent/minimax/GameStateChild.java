@@ -10,14 +10,17 @@ import java.util.Map;
  * Do not change this class.
  */
 public class GameStateChild {
-    //* This is set of unit actions that produced the game state
-	// The integer is the unit id and the action is the action that unit took
-	// in this state
+    /**
+     * The set of unit actions that produced the game state.
+     * The integer is the unit id and the action is the action that unit took
+	 * in this state.
+     */
     public Map<Integer, Action> action;
-    //* This is the game state resulting from the specified set of actions
+    
+    //The game state resulting from the specified set of actions
     public GameState state;
 
-    public GameStateChild(State.StateView state) throws IOException
+    public GameStateChild(State.StateView state)
     {
         action = null;
         this.state = new GameState(state);
