@@ -17,12 +17,12 @@ import java.util.Map.Entry;
 /**
  * This class stores all of the information the agent needs to know about the
  * state of the game. For example this might include things like footmen HP and
- * positions.
+ * s.
  *
  * Add any information or methods you would like to this class, but do not
  * delete or change the signatures of the provided methods.
  */
-public class GameState {
+public class GameState implements Comparable<GameState>{
 	private static final int W_FOOTMAN_HP = 1;
 	private static final int W_FOOTMAN_DISTANCE = -1;
 	private static final int W_ARCHER_HP = -10;
@@ -36,10 +36,8 @@ public class GameState {
 	private int footmanNum = 0;
 	private int archerNum = 1;
 	private int depth = 0;
-	private int weight = Integer.MIN_VALUE;
+	private int utility = Integer.MIN_VALUE;
 	private boolean isMax = true;
-	
-	private State state;
 
 	/**
 	 * You will implement this constructor. It will extract all of the needed
@@ -52,8 +50,8 @@ public class GameState {
 	 * state.getResourceNode(Integer resourceID): Return a ResourceView for the
 	 * given ID
 	 *
-	 * For a given ResourceView you can query the position using
-	 * resource.getXPosition() and resource.getYPosition()
+	 * For a given ResourceView you can query the  using
+	 * resource.getX() and resource.getY()
 	 *
 	 * For a given unit you will need to find the attack damage, range and max
 	 * HP unitView.getTemplateView().getRange(): This gives you the attack range
@@ -79,8 +77,8 @@ public class GameState {
 			archers.add(new GameUnit(archer));
 		}
 		
-		xExtent = state.getXExtent();
-		yExtent = state.getYExtent();
+		xExtent = stateView.getXExtent();
+		yExtent = stateView.getYExtent();
 	}
 
 	public GameState(State.StateView state, int depth) throws IOException {
@@ -88,17 +86,18 @@ public class GameState {
 		this.depth = depth;
 	}
 
-	/* Not really sure what this constructor is for so I'm commenting it out for now
+	//We need this constructor to initialize the A/B search
 	public GameState(Integer weight) {
-		this.weight = weight;
-		footmenView = new ArrayList<UnitView>();
-		archersView = new ArrayList<UnitView>();
+		this.utility = utility;
+		footmen = new ArrayList<GameUnit>();
+		archers = new ArrayList<GameUnit>();
 	}
-	*/
 	
 	public GameState(GameState parent){
-		this.footmen = parent.footmen;
-		this.archers = parent.archers;
+		this.footmen = new ArrayList<GameUnit>();
+		this.footmen.addAll(parent.footmen);
+		this.archers = new ArrayList<GameUnit>();
+		this.archers.addAll(parent.archers);
 		this.xExtent = parent.getXExtent();
 		this.yExtent = parent.getYExtent();
 		this.depth = parent.getDepth() + 1;
@@ -196,28 +195,28 @@ public class GameState {
 				//Specifically says in the JavaDoc not to move units in this way
 				//but since we're not actually returning this in the middlestep I don't see any other way to do it currently.
 				if (moveDirection == Direction.NORTH)
-					unit.setYPosition(unit.getYPosition() + 1);
+					unit.setY(unit.getY() + 1);
 				if (moveDirection == Direction.SOUTH)
-					unit.setYPosition(unit.getYPosition() - 1);
+					unit.setY(unit.getY() - 1);
 				if (moveDirection == Direction.EAST)
-					unit.setXPosition(unit.getXPosition() + 1);
+					unit.setX(unit.getX() + 1);
 				if (moveDirection == Direction.WEST)
-					unit.setXPosition(unit.getXPosition() - 1);
+					unit.setX(unit.getX() - 1);
 				if (moveDirection == Direction.NORTHEAST){
-					unit.setYPosition(unit.getYPosition() + 1);
-					unit.setXPosition(unit.getXPosition() + 1);
+					unit.setY(unit.getY() + 1);
+					unit.setX(unit.getX() + 1);
 				}
 				if (moveDirection == Direction.SOUTHEAST){
-					unit.setYPosition(unit.getYPosition() - 1);
-					unit.setXPosition(unit.getXPosition() + 1);
+					unit.setY(unit.getY() - 1);
+					unit.setX(unit.getX() + 1);
 				}
 				if (moveDirection == Direction.NORTHWEST){
-					unit.setYPosition(unit.getYPosition() + 1);
-					unit.setXPosition(unit.getXPosition() - 1);
+					unit.setY(unit.getY() + 1);
+					unit.setX(unit.getX() - 1);
 				}
 				if (moveDirection == Direction.SOUTHWEST){
-					unit.setYPosition(unit.getYPosition() - 1);
-					unit.setXPosition(unit.getXPosition() - 1);
+					unit.setY(unit.getY() - 1);
+					unit.setX(unit.getX() - 1);
 				}
 			}
 		}
@@ -294,41 +293,44 @@ public class GameState {
 	 * @return The weighted linear combination of the features
 	 */
 	public int getUtility() {
-		int distanceFromArchers = 0;
-		for (GameUnit footman : footmen) {
-			distanceFromArchers += minDistanceFromArcher(footman);
+		if (utility == Integer.MIN_VALUE){
+			int distanceFromArchers = 0;
+			for (GameUnit footman : footmen) {
+				distanceFromArchers += minDistanceFromArcher(footman);
+			}
+	
+			utility = ((W_FOOTMAN_HP * getFootmenHealth())
+					+ (W_ARCHER_HP * getArcherHealth())
+					+ (W_FOOTMAN_DISTANCE * distanceFromArchers)
+					+ (W_FOOTMAN_ALIVE * footmen.size()) + (W_ARCHER_ALIVE * archers
+					.size()));
 		}
-
-		return ((W_FOOTMAN_HP * getFootmenHealth())
-				+ (W_ARCHER_HP * getArcherHealth())
-				+ (W_FOOTMAN_DISTANCE * distanceFromArchers)
-				+ (W_FOOTMAN_ALIVE * footmen.size()) + (W_ARCHER_ALIVE * archers
-				.size()));
+		return utility;
 	}
 
-	// public int getWeight(){
-	// if (weight == Integer.MIN_VALUE){
-	// weight = 0;
-	// UnitView a = archers.get(0);
-	// UnitView f1 = footmen.get(0);
-	// UnitView f2 = footmen.get(1);
-	// int dx1 = Math.abs(a.getXPosition() - f1.getXPosition());
-	// int dy1 = Math.abs(a.getYPosition() - f1.getYPosition());
-	// int dx2 = Math.abs(a.getXPosition() - f2.getXPosition());
-	// int dy2 = Math.abs(a.getYPosition() - f2.getYPosition());
-	// weight -= dx1 * 10 + dy1 + dx2 + dy2 * 10;
-	// }
-	// return weight;
-	// }
+//	 public int getUtility(){
+//		 if (weight == Integer.MIN_VALUE){
+//		 weight = 0;
+//		 GameUnit a = archers.get(0);
+//		 GameUnit f1 = footmen.get(0);
+//		 GameUnit f2 = footmen.get(1);
+//		 int dx1 = Math.abs(a.getX() - f1.getX());
+//		 int dy1 = Math.abs(a.getY() - f1.getY());
+//		 int dx2 = Math.abs(a.getX() - f2.getX());
+//		 int dy2 = Math.abs(a.getY() - f2.getY());
+//		 weight -= dx1 * 10 + dy1 + dx2 + dy2 * 10;
+//		 }
+//		 return weight;
+//	 }
 
 	private int minDistanceFromArcher(GameUnit footman) {
 		int minDist = Integer.MAX_VALUE;
 		int nextDist = 0;
 		// Find the closest distance between footman and archers
 		for (GameUnit archer : archers) {
-			nextDist = Math.max(
-					Math.abs(footman.getXPosition() - archer.getXPosition()),
-					Math.abs(footman.getYPosition() - archer.getYPosition()));
+			nextDist = Math.min(
+					Math.abs(footman.getX() - archer.getX()),
+					Math.abs(footman.getY() - archer.getY()));
 			if (nextDist < minDist) {
 				minDist = nextDist;
 			}
@@ -350,7 +352,7 @@ public class GameState {
 	 *
 	 * for(Direction direction : Directions.values())
 	 *
-	 * To get the resulting position from a move in that direction you can do
+	 * To get the resulting  from a move in that direction you can do
 	 * the following x += direction.xComponent() y += direction.yComponent()
 	 *
 	 * @return All possible actions and their associated resulting game state
@@ -425,12 +427,12 @@ public class GameState {
 		return children;
 	}
 
-	private List<Action> getActions(UnitView player, List<UnitView> enemies) {
+	private List<Action> getActions(GameUnit player, List<GameUnit> enemies) {
 		List<GameUnit> entities = getEntities();
 		List<Action> actions = new ArrayList<>();
 
-		int playerX = player.getXPosition();
-		int playerY = player.getYPosition();
+		int playerX = player.getX();
+		int playerY = player.getY();
 
 		// Add all possible moves to the action list for this player
 		for (Direction direction : Direction.values()) {
@@ -471,13 +473,13 @@ public class GameState {
 			units = archers;
 		}
 		
-		int xOne = units.get(0).getXPosition()
+		int xOne = units.get(0).getX()
 				+ dActionOne.getDirection().xComponent();
-		int yOne = units.get(0).getYPosition()
+		int yOne = units.get(0).getY()
 				+ dActionOne.getDirection().yComponent();
-		int xTwo = units.get(1).getXPosition()
+		int xTwo = units.get(1).getX()
 				+ dActionTwo.getDirection().xComponent();
-		int yTwo = units.get(1).getYPosition()
+		int yTwo = units.get(1).getY()
 				+ dActionTwo.getDirection().yComponent();
 		return (xOne == xTwo) && (yOne == yTwo);
 	}
@@ -504,7 +506,7 @@ public class GameState {
 		} else {
 			// check if an entity is already at the desired move location
 			ENTITY_LOOP: for (GameUnit entity : entities) {
-				if (entity.getXPosition() == x && entity.getYPosition() == y) {
+				if (entity.getX() == x && entity.getY() == y) {
 					isPossible = false;
 					break ENTITY_LOOP;
 				}
@@ -513,7 +515,7 @@ public class GameState {
 		return isPossible;
 	}
 
-	private List<GameUnit> enemiesInRange(UnitView player) {
+	private List<GameUnit> enemiesInRange(GameUnit player) {
 		int range = 0;
 		int xDiff = 0;
 		int yDiff = 0;
@@ -529,12 +531,43 @@ public class GameState {
 		}
 
 		for (GameUnit enemy : enemies) {
-			xDiff = Math.abs(player.getXPosition() - enemy.getXPosition());
-			yDiff = Math.abs(player.getYPosition() - enemy.getYPosition());
+			xDiff = Math.abs(player.getX() - enemy.getX());
+			yDiff = Math.abs(player.getY() - enemy.getY());
 			if (range >= (xDiff + yDiff)) {
 				enemiesInRange.add(enemy);
 			}
 		}
 		return enemiesInRange;
 	}
+	
+	@Override
+	public boolean equals(Object o){
+		if (o instanceof GameState){
+			GameState state = (GameState)o;
+			return this.footmen.equals(state.footmen) &&
+					this.archers.equals(state.archers) &&
+					this.depth == state.depth &&
+					this.getUtility() == state.getUtility() &&
+					this.isMax == state.isMax;
+		}
+		return false;
+	}
+
+	@Override
+	public int compareTo(GameState state) {
+		//Compare utilities of states to order them
+		return new Integer(this.getUtility()).compareTo(state.getUtility());
+	}
+	
+	public int hashcode(){
+		int hashcode = footmen.size() + archers.size();
+		hashcode *= 31;
+		hashcode += depth * 31;
+		hashcode += getUtility() * 31;
+		if (isMax){
+			hashcode += 3 * (53 + 31);
+		}
+		return hashcode;
+	}
+
 }

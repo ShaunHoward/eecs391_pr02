@@ -41,8 +41,8 @@ public class GameUnit {
 		return HP;
 	}
 
-	public void setHP(int hP) {
-		HP = hP;
+	public void setHP(int hp) {
+		HP = hp;
 	}
 
 	public int getDamage() {
