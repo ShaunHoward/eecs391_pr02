@@ -84,7 +84,8 @@ public class MinimaxAlphaBeta extends Agent {
      * @return The best child of this node with updated values
      */
     public GameStateChild alphaBetaSearch(GameStateChild node, int depth, boolean isMax, GameStateChild alpha, GameStateChild beta)
-    {
+    {    	
+    	node.state.setDepth(depth);
     	if (depth == numPlys || node.state.isTerminal()){
     		return node;
     	}
