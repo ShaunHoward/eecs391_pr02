@@ -305,7 +305,7 @@ public class GameState implements Comparable<GameState> {
 			ActionType currentActionType = currentAction.getType();
 
 			// Apply the attack action and deduct health from opponent
-			if (currentActionType == ActionType.COMPOUNDATTACK) {
+			if (currentActionType == ActionType.PRIMITIVEATTACK) {
 				TargetedAction currentTargetedAction = (TargetedAction) currentAction;
 				int unitId = currentTargetedAction.getUnitId();
 				int targetId = currentTargetedAction.getTargetId();
@@ -479,10 +479,10 @@ public class GameState implements Comparable<GameState> {
 			for (Action unitOneAction : unitOneActions) {
 				actionMap = new HashMap<>();
 				actionMap.put(unitOneID, unitOneAction);
-				// ** Need to apply actions to new state
+				//Apply actions to new state
 				GameState newState = new GameState(this);
 				newState.applyActions(actionMap);
-				// ** Then add new state child to list of state children
+				//Then add new state child to list of state children
 				children.add(new GameStateChild(actionMap, newState));
 			}
 		}
@@ -495,6 +495,7 @@ public class GameState implements Comparable<GameState> {
 		Action unitOneAction = actionMap.get(unitOneID);
 		Action unitTwoAction = actionMap.get(unitTwoID);
 
+		//Check if the two units are attempting to move to the same location
 		if (unitOneAction.getType() == ActionType.PRIMITIVEMOVE
 				&& unitTwoAction.getType() == ActionType.PRIMITIVEMOVE
 				&& moveToSameLocation(unitOneAction, unitOneID, unitTwoAction,
@@ -502,6 +503,7 @@ public class GameState implements Comparable<GameState> {
 			return true;
 		}
 		
+		//Check if either of the units is attempting to move into the same location as an obstacle
 		for (ResourceView obstacle : obstacles) {
 
 			if (unitOneAction.getType() == ActionType.PRIMITIVEMOVE
@@ -566,7 +568,7 @@ public class GameState implements Comparable<GameState> {
 		
 		// Add all possible attacks to the action list for this player
 		for (GameUnit enemy : enemiesInRange(player)) {
-			actions.add(Action.createCompoundAttack(player.getID(),
+			actions.add(Action.createPrimitiveAttack(player.getID(),
 					enemy.getID()));
 		}
 		return actions;
