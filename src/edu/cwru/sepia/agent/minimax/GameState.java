@@ -694,6 +694,11 @@ public class GameState implements Comparable<GameState> {
 		return isPossible;
 	}
 
+	/**
+	 * Gets a list of all enemies that can be attacked by the player
+	 * @param player The attacking player
+	 * @return List<GameUnit> of all enemies that can be attacked
+	 */
 	private List<GameUnit> enemiesInRange(GameUnit player) {
 		int range = 0;
 		int xDiff = 0;
