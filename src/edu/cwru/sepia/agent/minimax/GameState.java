@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Stack;
 
 import edu.cwru.sepia.action.Action;
@@ -742,16 +741,4 @@ public class GameState implements Comparable<GameState> {
 		// Compare utilities of states to order them
 		return new Integer(this.getUtility()).compareTo(state.getUtility());
 	}
-
-	public int hashcode() {
-		int hashcode = footmen.size() + archers.size();
-		hashcode *= 31;
-		hashcode += depth * 31;
-		hashcode += getUtility() * 31;
-		if (isMax) {
-			hashcode += 3 * (53 + 31);
-		}
-		return hashcode;
-	}
-
 }
