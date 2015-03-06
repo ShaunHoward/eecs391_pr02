@@ -3,7 +3,6 @@ package edu.cwru.sepia.agent.minimax;
 import edu.cwru.sepia.action.Action;
 import edu.cwru.sepia.environment.model.state.State;
 
-import java.io.IOException;
 import java.util.Map;
 
 /**
