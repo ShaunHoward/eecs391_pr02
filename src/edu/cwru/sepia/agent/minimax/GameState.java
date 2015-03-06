@@ -382,6 +382,11 @@ public class GameState implements Comparable<GameState> {
 		return utility;
 	}
 
+	/**
+	 * Gets the distance from the footman to the closest archer
+	 * @param footman The base unit
+	 * @return The distance from the footman to the closest archer
+	 */
 	private int minDistanceFromArcher(GameUnit footman) {	
 		int xDiff = 0;
 		int yDiff = 0;
@@ -489,6 +494,13 @@ public class GameState implements Comparable<GameState> {
 		return children;
 	}
 
+	/**
+	 * Checks to see if an action is bad, either because the two units are moving to the same location, or because they're moving into an obstacle
+	 * @param actionMap The action map contain the two actions for the characters
+	 * @param unitOneID The Unit1 ID
+	 * @param unitTwoID The Unit2 ID
+	 * @return True if the action is bad, false otherwise
+	 */
 	private boolean badActions(Map<Integer, Action> actionMap, int unitOneID,
 			int unitTwoID) {
 
@@ -498,7 +510,7 @@ public class GameState implements Comparable<GameState> {
 		//Check if the two units are attempting to move to the same location
 		if (unitOneAction.getType() == ActionType.PRIMITIVEMOVE
 				&& unitTwoAction.getType() == ActionType.PRIMITIVEMOVE
-				&& moveToSameLocation(unitOneAction, unitOneID, unitTwoAction,
+				&& moveToSameLocation(null, unitOneAction, unitOneID, unitTwoAction,
 						unitTwoID)) {
 			return true;
 		}
@@ -517,6 +529,15 @@ public class GameState implements Comparable<GameState> {
 		return false;
 	}
 
+	/**
+	 * Checks if two units are moving to the same location, or into an obstacle
+	 * @param obstacle The possible obstacle
+	 * @param moveActionOne The action of the first unit
+	 * @param unitIDOne The ID of the first unit
+	 * @param moveActionTwo The action of the second unit
+	 * @param unitIDTwo The ID of the second unit
+	 * @return True if the units are moving to the same location, or into the obstacle, false otherwise
+	 */
 	public boolean moveToSameLocation(ResourceView obstacle,
 			Action moveActionOne, int unitIDOne, Action moveActionTwo,
 			int unitIDTwo) {
@@ -529,14 +550,27 @@ public class GameState implements Comparable<GameState> {
 		int yOne = unitOne.getY() + dActionOne.getDirection().yComponent();
 		int xTwo = unitTwo.getX() + dActionTwo.getDirection().xComponent();
 		int yTwo = unitTwo.getY() + dActionTwo.getDirection().yComponent();
-		int xOb = obstacle.getXPosition();
-		int yOb = obstacle.getYPosition();
+		int xOb, yOb;
+		if (obstacle != null) {
+			xOb = obstacle.getXPosition();
+			yOb = obstacle.getYPosition();
+		}
+		else {
+			xOb = -1;
+			yOb = -1;
+		}
 		if ((xOne == xOb && yOne == yOb) || (xTwo == xOb && yTwo == yOb)) {
 			return true;
 		}
 		return false;
 	}
 
+	/**
+	 * Gets all possible actions the agent can take
+	 * @param player The agent whose actions are being retrieved
+	 * @param enemies All enemies of the player that are on the map
+	 * @return A List<Action> of all possible actions for the player
+	 */
 	private List<Action> getActions(GameUnit player, List<GameUnit> enemies) {
 		List<GameUnit> entities = getEntities();
 		List<Action> actions = new ArrayList<>();
@@ -574,6 +608,12 @@ public class GameState implements Comparable<GameState> {
 		return actions;
 	}
 
+	/**
+	 * Gets the direction of a move based on a GameUnit and its next location
+	 * @param player The GameUnit that is moving
+	 * @param nextLoc The location the GameUnit will be moving to
+	 * @return The Direction of the move
+	 */
 	private Direction getMoveDirection(GameUnit player, MapLocation nextLoc) {
 		int playerX = player.getX();
 		int playerY = player.getY();
@@ -597,6 +637,12 @@ public class GameState implements Comparable<GameState> {
 		return null;
 	}
 
+	/**
+	 * Finds the closest enemy to a given player
+	 * @param player The GameUnit whose closest enemy is being found
+	 * @param enemies The list of all enemies of the GameUnit in the state
+	 * @return The GameUnit object for the closest enemy
+	 */
 	private GameUnit getClosestEnemy(GameUnit player, List<GameUnit> enemies) {
 		int minDist = Integer.MAX_VALUE;
 		int nextDist = 0;
@@ -615,35 +661,6 @@ public class GameState implements Comparable<GameState> {
 		}
 
 		return closestEnemy;
-	}
-
-	/**
-	 * Determines if both unit 1 and unit 2 are moving to the same location.
-	 * These units are determined based on whether this game state is a max
-	 * state.
-	 * 
-	 * @param moveActionOne
-	 *            - the move action of unit 1
-	 * @param unitIDOne
-	 *            - the id of unit one
-	 * @param moveActionTwo
-	 *            - the move action of unit 2
-	 * @param unitIDTwo
-	 *            - the id of unit two
-	 * @return whether both unit 1 and unit 2 are moving to the same location
-	 */
-	public boolean moveToSameLocation(Action moveActionOne, int unitIDOne,
-			Action moveActionTwo, int unitIDTwo) {
-		DirectedAction dActionOne = (DirectedAction) moveActionOne;
-		DirectedAction dActionTwo = (DirectedAction) moveActionTwo;
-
-		GameUnit unitOne = getUnit(unitIDOne);
-		GameUnit unitTwo = getUnit(unitIDTwo);
-		int xOne = unitOne.getX() + dActionOne.getDirection().xComponent();
-		int yOne = unitOne.getY() + dActionOne.getDirection().yComponent();
-		int xTwo = unitTwo.getX() + dActionTwo.getDirection().xComponent();
-		int yTwo = unitTwo.getY() + dActionTwo.getDirection().yComponent();
-		return (xOne == xTwo) && (yOne == yTwo);
 	}
 
 	/**
