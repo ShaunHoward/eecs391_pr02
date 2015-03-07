@@ -5,7 +5,17 @@ import edu.cwru.sepia.agent.minimax.AstarAgent.MapLocation;
 import edu.cwru.sepia.environment.model.state.Unit;
 import edu.cwru.sepia.environment.model.state.UnitTemplate.UnitTemplateView;
 
+/**
+ * A game unit is a unit in the SEPIA game.
+ * This class stores the values for each unit, including x,y position,
+ * health, damage, ID, and a path to the targeted enemy, if one has
+ * been calculated.
+ * 
+ * @author Shaun Howard(smh150), Matt Swartwout(mws85)
+ *
+ */
 public class GameUnit {
+	
 	//GameUnit variables: position, health, damage, ID, pathToEnemy
 	private int x, y;
 	private int HP;
@@ -15,15 +25,16 @@ public class GameUnit {
 
 	/**
 	 * Creates a GameUnit with the same characteristics as the given
-	 * Unit.UnitView
+	 * Unit.UnitView.
 	 * 
-	 * @param unit
-	 *            The Unit.UnitView that the GameUnit should be based on
+	 * @param unit -
+	 *            the Unit.UnitView that the GameUnit should be based on
 	 */
 	public GameUnit(Unit.UnitView unit) {
 
 		UnitTemplateView unitTemplate = unit.getTemplateView();
 
+		//Set all necessary values of this game unit from the given unit view
 		x = unit.getXPosition();
 		y = unit.getYPosition();
 		HP = unit.getHP();
@@ -33,10 +44,10 @@ public class GameUnit {
 	}
 
 	/**
-	 * Creates a GameUnit with the same characteristics as the given GameUnit
+	 * Creates a GameUnit with the same characteristics as the given GameUnit.
 	 * 
-	 * @param gUnit
-	 *            The GameUnit that the new GameUnit should be based
+	 * @param gUnit -
+	 *            the GameUnit that the new GameUnit should be based on
 	 */
 	public GameUnit(GameUnit gUnit) {
 		this.x = gUnit.getX();
@@ -45,7 +56,7 @@ public class GameUnit {
 		this.damage = gUnit.getDamage();
 		this.ID = gUnit.getID();
 	}
-
+	
 	public int getX() {
 		return x;
 	}

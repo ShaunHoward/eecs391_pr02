@@ -10,7 +10,15 @@ import java.util.Stack;
 import edu.cwru.sepia.environment.model.state.ResourceNode.ResourceView;
 import edu.cwru.sepia.util.DistanceMetrics;
 
+/**
+ * The a-star agent for the SEPIA game engine. This agent
+ * is used in the minimax alpha-beta search to find a decent path
+ * to the enemy around obstacles that exist in the current game map.
+ * 
+ * @author Shaun Howard (smh150), Matt Swartwout (mws85)
+ */
 public class AstarAgent {
+	
 	//The x and y extent of the current map
 	private int xExtent, yExtent;
 	
@@ -52,6 +60,7 @@ public class AstarAgent {
         /* the locations of resources on this map. */
         Set<MapLocation> resourceLocations;
 
+        //Constructor for the agent
         public AgentMap(int xExtent, int yExtent, MapLocation agentStart, MapLocation agentStop, Set<MapLocation> resourceLocations) {
             this.xExtent = xExtent;
             this.yExtent = yExtent;
@@ -137,11 +146,10 @@ public class AstarAgent {
     Stack<MapLocation> path;
 
     //Serial IDs for game components
-    int footmanID, townhallID, enemyFootmanID;
+    int footmanID;
 
     //The next location of the footman to travel along the path through the map
     MapLocation nextLoc;
-    
 
     /**
      * A map location class for each location on the current map of the A* agent.
@@ -426,12 +434,12 @@ public class AstarAgent {
     }
     
     /**
-     * Finds an A* path from the footman start position to the town hall position if one exists.
+     * Finds an A* path from the footman start position to the enemy position if one exists.
      * If a path does not exist, null will be returned. The enemy footman location and resource locations
      * are noted to make sure the agent navigates around them since they are considered unreachable locations.
      *
      * @param state - the state of the map
-     * @return the maplocations of an A* path to navigate the agent to the town hall around all resources and enemy
+     * @return the map locations of an A* path to navigate the player to the enemy
      */
     public Stack<MapLocation> findPath(List<ResourceView> obstacles, GameUnit player, GameUnit enemy) {
 
@@ -439,7 +447,7 @@ public class AstarAgent {
 
         MapLocation goalLoc = new MapLocation(enemy.getX(), enemy.getY(), null, 0);
 
-        // get resource locations
+        // get resource locations and add to set
         Set<MapLocation> resourceLocations = new HashSet<MapLocation>();
         for (ResourceView resource : obstacles) {
             resourceLocations.add(new MapLocation(resource.getXPosition(), resource.getYPosition(), null, 0));

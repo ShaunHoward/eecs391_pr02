@@ -20,11 +20,20 @@ import edu.cwru.sepia.util.Direction;
 
 /**
  * This class stores all of the information the agent needs to know about the
- * state of the game. For example this might include things like footmen HP and
- * s.
- *
- * Add any information or methods you would like to this class, but do not
- * delete or change the signatures of the provided methods.
+ * state of the game. Properties such as footmen health, archer health,
+ * state utility, whether the state is a max state, and the list of obstacles
+ * in this current state are stored in this class.
+ * 
+ * There are methods to generate the children of this game state based on 
+ * what actions can be taken for the current state of the game. If there are
+ * obstacles in the current game, the game state will produce directed actions
+ * based on the use of a-star search. Once the search fails, all permutations
+ * of directed actions are generated and evaluated for utility value.
+ * When the given unit is in range of another unit, attacks will also be applied
+ * to their actions list, and thus generated children are produced by directed
+ * and attack actions.
+ * 
+ * A game state is comparable based on its estimated utility value.
  */
 public class GameState implements Comparable<GameState> {
 
@@ -34,10 +43,12 @@ public class GameState implements Comparable<GameState> {
 	private static final int W_ARCHER_HP = -10;
 	private static final int W_FOOTMAN_ALIVE = 10;
 	private static final int W_ARCHER_ALIVE = -100;
+	
+	//Ranges of game units
 	private static final int FOOTMAN_RANGE = 1;
 	private static final int ARCHER_RANGE = 8;
 
-	// Game state variables including units, depth, utility, map
+	// Game state variables including units, depth, utility, is max node, map
 	// properties and valid directions to move in.
 	public int xExtent = 0, yExtent = 0;
 	public List<GameUnit> footmen, archers;
@@ -46,33 +57,18 @@ public class GameState implements Comparable<GameState> {
 	private int depth = 0;
 	private int utility;
 	private boolean isMax = true;
-	private List<Direction> validDirections;
 	private List<ResourceView> obstacles;
+	private List<Direction> validDirections;
+	
+	//The a-star agent to use when path-finding is needed.
 	private AstarAgent aStarAgent;
 
 	/**
-	 * You will implement this constructor. It will extract all of the needed
-	 * state information from the built in SEPIA state view.
+	 * A constructor that extracts all of the needed
+	 * state information from the built-in SEPIA state view.
 	 *
-	 * You may find the following state methods useful:
-	 *
-	 * state.getXExtent() and state.getYExtent(): get the map dimensions
-	 * state.getAllResourceIDs(): returns all of the obstacles in the map
-	 * state.getResourceNode(Integer resourceID): Return a ResourceView for the
-	 * given ID
-	 *
-	 * For a given ResourceView you can query the using resource.getX() and
-	 * resource.getY()
-	 *
-	 * For a given unit you will need to find the attack damage, range and max
-	 * HP unitView.getTemplateView().getRange(): This gives you the attack range
-	 * unitView.getTemplateView().getBasicAttack(): The amount of damage this
-	 * unit deals unitView.getTemplateView().getBaseHealth(): The maximum amount
-	 * of health of this unit
-	 *
-	 * @param state
-	 *            Current state of the episode
-	 * @throws IOException
+	 * @param state -
+	 *            current state of the game
 	 */
 	public GameState(State.StateView stateView){
 		//Lists of the GameUnits that will be used to track the state
@@ -119,15 +115,10 @@ public class GameState implements Comparable<GameState> {
 	}
 
 	/**
-<<<<<<< HEAD
-	 * Constructor used to initialize the A/B search 
-	 * @param utility - the initial utility of this game state
-=======
 	 * Constructor used to initialize the A/B search
 	 * 
 	 * @param utility
 	 *            - the initial utility of this game state
->>>>>>> e6d970f709d8fb2ce4f622ca0710a6222157416a
 	 */
 	public GameState(Integer utility) {
 		this.utility = utility;
@@ -241,12 +232,7 @@ public class GameState implements Comparable<GameState> {
 
 	/**
 	 * Gets the total health of all footmen
-<<<<<<< HEAD
-	 * @return Total health of all footmen
-=======
-	 * 
-	 * @return int Total health of all footmen
->>>>>>> e6d970f709d8fb2ce4f622ca0710a6222157416a
+	 * @return the total health of all footmen
 	 */
 	public int getFootmenHealth() {
 		int totalHealth = 0;
