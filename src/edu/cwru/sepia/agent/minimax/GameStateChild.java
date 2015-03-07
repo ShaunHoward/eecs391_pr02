@@ -6,7 +6,8 @@ import edu.cwru.sepia.environment.model.state.State;
 import java.util.Map;
 
 /**
- * Do not change this class.
+ * A game state child class that links an action map to the game state
+ * it produces.
  */
 public class GameStateChild {
     /**

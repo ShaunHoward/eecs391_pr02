@@ -130,11 +130,11 @@ public class GameState implements Comparable<GameState> {
 	}
 
 	/**
-	 * Creates a child game state from a parent game state, same values but
+	 * Creates a child game state from a parent game state with the same properties but
 	 * depth is one deeper
 	 * 
-	 * @param parent
-	 *            The parent GameState
+	 * @param parent -
+	 *            the parent GameState
 	 */
 	public GameState(GameState parent) {
 		// Initializes all footmen and archers to the same as the parent
@@ -169,7 +169,7 @@ public class GameState implements Comparable<GameState> {
 	/**
 	 * Gets a list of all valid directions for movement in the state
 	 * 
-	 * @return A list of valid movement directions
+	 * @return a list of valid movement directions
 	 */
 	public List<Direction> createValidDirectionsList() {
 
@@ -183,10 +183,11 @@ public class GameState implements Comparable<GameState> {
 	}
 
 	/**
-	 * Checks if directions are valid, only allowed movement are N,E,S,W
+	 * Checks if a direction is valid. Only allowed movement is NORTH,
+	 * EAST, SOUTH, and WEST.
 	 * 
-	 * @param direction
-	 *            The direction whose validity is being checked
+	 * @param direction -
+	 *            the direction whose validity is being checked
 	 * @return True if the direction is valid, false otherwise
 	 */
 	private boolean isValidDirection(Direction direction) {
@@ -231,7 +232,8 @@ public class GameState implements Comparable<GameState> {
 	}
 
 	/**
-	 * Gets the total health of all footmen
+	 * Gets the total health of all footmen.
+	 * 
 	 * @return the total health of all footmen
 	 */
 	public int getFootmenHealth() {
@@ -243,9 +245,9 @@ public class GameState implements Comparable<GameState> {
 	}
 
 	/**
-	 * Gets the total health of all archers
+	 * Gets the total health of all archers.
 	 * 
-	 * @return in Total health of all archers
+	 * @return the total health of all archers
 	 */
 	public int getArcherHealth() {
 		int totalHealth = 0;
@@ -256,9 +258,9 @@ public class GameState implements Comparable<GameState> {
 	}
 
 	/**
-	 * Returns a list of all GameUnits in the game, bother archers and footmen
+	 * Returns a list of all GameUnits in the game, both archers and footmen.
 	 * 
-	 * @return List<GameUnit> All GameUnits in the state
+	 * @return all GameUnits in the state
 	 */
 	public List<GameUnit> getEntities() {
 		List<GameUnit> entities = new ArrayList<>(footmen);
@@ -267,23 +269,35 @@ public class GameState implements Comparable<GameState> {
 	}
 
 	/**
-	 * Returns whether or not a state is terminal
+	 * Returns whether a state is terminal based on if there
+	 * are any players left on the map.
 	 * 
-	 * @return True if the state is terminal, false otherwise
+	 * If either team is completely dead, the state is a terminal.
+	 * 
+	 * @return true if the state is terminal, false otherwise
 	 */
 	public boolean isTerminal() {
 		return footmen.isEmpty() || archers.isEmpty();
 	}
 
 	/**
-	 * Applies actions to the state
+	 * Applies actions to the state based on the action type.
 	 * 
-	 * @param actions
-	 *            The actions to be applied
+	 * Primitve attacks denote the player to attack the target enemy.
+	 * The result is that the enemy's health is deducted by the damage of the
+	 * attacking game unit.
+	 * 
+	 * Primitive moves denote the player to move in the direction of the move.
+	 * It is assumed the the moves will be checked for validity before they are
+	 * added to the map of actions.
+	 * 
+	 * @param actions -
+	 *            the actions to be applied for each game unit keyed by ID
 	 */
 	public void applyActions(Map<Integer, Action> actions) {
 		Iterator<Integer> keySetItr = actions.keySet().iterator();
 
+		//Iterate through all units and apply their actions.
 		while (keySetItr.hasNext()) {
 			Integer currentKey = keySetItr.next();
 			Action currentAction = actions.get(currentKey);
@@ -315,8 +329,9 @@ public class GameState implements Comparable<GameState> {
 
 	/**
 	 * Finds the GameUnit with the matching ID
-	 * @param ID The ID to be searched for
-	 * @return The GameUnit with the matching ID, null if no GameUnit has that ID
+	 * 
+	 * @param ID - The ID to be searched for
+	 * @return the GameUnit with the matching ID, null if no GameUnit has that ID
 	 */
 	private GameUnit getUnit(int ID) {
 		List<GameUnit> entities = this.getEntities();
@@ -368,7 +383,8 @@ public class GameState implements Comparable<GameState> {
 	}
 
 	/**
-	 * Gets the distance from the footman to the closest archer
+	 * Gets the distance from the footman to the closest archer.
+	 * 
 	 * @param footman The base unit
 	 * @return The distance from the footman to the closest archer
 	 */
@@ -391,6 +407,7 @@ public class GameState implements Comparable<GameState> {
 				minDist = 50;
 			}
 		}
+		
 		//If no obstacles, use Euclidean distance
 		else {
 			minDist = Math.sqrt(Math.pow(Math.abs(xDiff),2)+Math.pow(Math.abs(yDiff), 2));
@@ -401,21 +418,11 @@ public class GameState implements Comparable<GameState> {
 	}
 
 	/**
-	 * You will implement this function.
-	 *
-	 * This will return a list of GameStateChild objects. You will generate all
+	 * This method returns a list of GameStateChild objects. We generate all
 	 * of the possible actions in a step and then determine the resulting game
-	 * state from that action. These are your GameStateChildren.
+	 * state from that action. These are the game state children.
 	 *
-	 * You may find it useful to iterate over all the different directions in
-	 * SEPIA.
-	 *
-	 * for(Direction direction : Directions.values())
-	 *
-	 * To get the resulting from a move in that direction you can do the
-	 * following x += direction.xComponent() y += direction.yComponent()
-	 *
-	 * @return All possible actions and their associated resulting game state
+	 * @return all possible actions and their associated resulting game state
 	 */
 	public List<GameStateChild> getChildren() {
 		//Lists of actions that are available to each unit
@@ -425,6 +432,8 @@ public class GameState implements Comparable<GameState> {
 		int unitOneID = 0;
 		int unitTwoID = 0;
 		boolean twoUnits = false;
+		
+		//Get the footmen and their actions
 		if (isMax) {
 			unitOneID = footmen.get(0).getID();
 			unitOneActions = getActions(footmen.get(0), archers);
@@ -436,6 +445,7 @@ public class GameState implements Comparable<GameState> {
 			}
 		}
 		else {
+			//Get the archers and their actions
 			unitOneID = archers.get(0).getID();
 			unitOneActions = getActions(archers.get(0), footmen);
 			if (archers.size() > 1) {
@@ -451,11 +461,13 @@ public class GameState implements Comparable<GameState> {
 		// Make all the possible game states, eliminating those options where
 		// player units move to the same location.
 		if (twoUnits) {
+			//Apply actions for two units and generate states
 			for (Action unitOneAction : unitOneActions) {
 				for (Action unitTwoAction : unitTwoActions) {
 					actionMap = new HashMap<>();
 					actionMap.put(unitOneID, unitOneAction);
 					actionMap.put(unitTwoID, unitTwoAction);
+					//Make a new game state from actions if they are not bad actions
 					if (!badActions(actionMap, unitOneID, unitTwoID)) {
 						// ** Need to apply actions to new state
 						GameState newState = new GameState(this);
@@ -466,6 +478,7 @@ public class GameState implements Comparable<GameState> {
 				}
 			}
 		} else {
+			//Apply actions for one unit and generate states
 			for (Action unitOneAction : unitOneActions) {
 				actionMap = new HashMap<>();
 				actionMap.put(unitOneID, unitOneAction);
@@ -480,10 +493,11 @@ public class GameState implements Comparable<GameState> {
 	}
 
 	/**
-	 * Checks to see if an action is bad, either because the two units are moving to the same location, or because they're moving into an obstacle
-	 * @param actionMap The action map contain the two actions for the characters
-	 * @param unitOneID The Unit1 ID
-	 * @param unitTwoID The Unit2 ID
+	 * Checks to see if an action is bad, either because the two units are moving to the same location, or because they're moving into an obstacle.
+	 * 
+	 * @param actionMap - The action map contain the two actions for the characters
+	 * @param unitOneID - The Unit1 ID
+	 * @param unitTwoID - The Unit2 ID
 	 * @return True if the action is bad, false otherwise
 	 */
 	private boolean badActions(Map<Integer, Action> actionMap, int unitOneID,
@@ -505,6 +519,7 @@ public class GameState implements Comparable<GameState> {
 
 			if (unitOneAction.getType() == ActionType.PRIMITIVEMOVE
 					&& unitTwoAction.getType() == ActionType.PRIMITIVEMOVE) {
+				//Make sure units don't move to same locations.
 				if (moveToSameLocation(obstacle, unitOneAction, unitOneID,
 						unitTwoAction, unitTwoID)) {
 					return true;
@@ -516,11 +531,11 @@ public class GameState implements Comparable<GameState> {
 
 	/**
 	 * Checks if two units are moving to the same location, or into an obstacle
-	 * @param obstacle The possible obstacle
-	 * @param moveActionOne The action of the first unit
-	 * @param unitIDOne The ID of the first unit
-	 * @param moveActionTwo The action of the second unit
-	 * @param unitIDTwo The ID of the second unit
+	 * @param obstacle - The possible obstacle
+	 * @param moveActionOne - The action of the first unit
+	 * @param unitIDOne - The ID of the first unit
+	 * @param moveActionTwo - The action of the second unit
+	 * @param unitIDTwo - The ID of the second unit
 	 * @return True if the units are moving to the same location, or into the obstacle, false otherwise
 	 */
 	public boolean moveToSameLocation(ResourceView obstacle,
@@ -531,11 +546,15 @@ public class GameState implements Comparable<GameState> {
 
 		GameUnit unitOne = getUnit(unitIDOne);
 		GameUnit unitTwo = getUnit(unitIDTwo);
+		
+		//Get x's and y's of both units
 		int xOne = unitOne.getX() + dActionOne.getDirection().xComponent();
 		int yOne = unitOne.getY() + dActionOne.getDirection().yComponent();
 		int xTwo = unitTwo.getX() + dActionTwo.getDirection().xComponent();
 		int yTwo = unitTwo.getY() + dActionTwo.getDirection().yComponent();
 		int xOb, yOb;
+		
+		//Check if obstacle or not
 		if (obstacle != null) {
 			xOb = obstacle.getXPosition();
 			yOb = obstacle.getYPosition();
@@ -544,6 +563,8 @@ public class GameState implements Comparable<GameState> {
 			xOb = -1;
 			yOb = -1;
 		}
+		
+		//check if going to same location and return true if so
 		if ((xOne == xOb && yOne == yOb) || (xTwo == xOb && yTwo == yOb)) {
 			return true;
 		}
@@ -551,9 +572,12 @@ public class GameState implements Comparable<GameState> {
 	}
 
 	/**
-	 * Gets all possible actions the agent can take
-	 * @param player The agent whose actions are being retrieved
-	 * @param enemies All enemies of the player that are on the map
+	 * Gets all possible actions the agent can take. 
+	 * A-star search is used to find a path to the targeted enemy if there are
+	 * obstacles on the map. This assures that the enemy will find 
+	 * 
+	 * @param player - The agent whose actions are being retrieved
+	 * @param enemies - All enemies of the player that are on the map
 	 * @return A List<Action> of all possible actions for the player
 	 */
 	private List<Action> getActions(GameUnit player, List<GameUnit> enemies) {
@@ -595,8 +619,9 @@ public class GameState implements Comparable<GameState> {
 
 	/**
 	 * Gets the direction of a move based on a GameUnit and its next location
-	 * @param player The GameUnit that is moving
-	 * @param nextLoc The location the GameUnit will be moving to
+	 * 
+	 * @param player - The GameUnit that is moving
+	 * @param nextLoc - The location the GameUnit will be moving to
 	 * @return The Direction of the move
 	 */
 	private Direction getMoveDirection(GameUnit player, MapLocation nextLoc) {
@@ -623,7 +648,8 @@ public class GameState implements Comparable<GameState> {
 	}
 
 	/**
-	 * Finds the closest enemy to a given player
+	 * Finds the closest enemy to a given player.
+	 * 
 	 * @param player The GameUnit whose closest enemy is being found
 	 * @param enemies The list of all enemies of the GameUnit in the state
 	 * @return The GameUnit object for the closest enemy
@@ -633,6 +659,7 @@ public class GameState implements Comparable<GameState> {
 		int nextDist = 0;
 		GameUnit closestEnemy = null;
 		GameUnit archer;
+		//Find the closest enemy
 		for (GameUnit enemy : enemies) {
 			archer = enemy;
 			int xDiff = player.getX() - archer.getX();
@@ -691,6 +718,7 @@ public class GameState implements Comparable<GameState> {
 		List<GameUnit> enemies;
 		List<GameUnit> enemiesInRange = new ArrayList<>();
 
+		//When max, enemies are archers
 		if (isMax) {
 			enemies = archers;
 			range = FOOTMAN_RANGE;
